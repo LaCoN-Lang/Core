@@ -1,0 +1,20 @@
+msrv = "1.89.0"
+too-many-arguments-threshold = 6
+too-many-lines-threshold = 120
+cognitive-complexity-threshold = 25
+type-complexity-threshold = 200
+enum-variant-name-threshold = 3
+single-char-binding-names-threshold = 2
+literal-representation-threshold = 16
+enum-variant-size-threshold = 200
+
+avoid-breaking-exported-api = true
+warn-on-all-wildcard-imports = true
+
+allow-panic-in-tests = true
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+allow-unwrap-in-consts = false
+allow-expect-in-consts = false
+
+warn-on-ignored-returns = true

@@ -1,0 +1,37 @@
+[build]
+target-dir = "dist/target"
+
+[term]
+color = "always"
+quiet = false
+
+[resolver]
+incompatible-rust-versions = "fallback"
+
+[profile.dev]
+opt-level = 1
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+
+[profile.release]
+opt-level = 3
+incremental = false
+debug = false
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[alias]
+release = "build --release"
+b = "build"
+r = "run"
+t = "test"
+c = "check"
+d = "doc --workspace --no-deps"
+df = "doc --workspace"
+dc = "doc --open --no-deps --package engine"
+dl = "doc --open --no-deps --package lsp"
+di = "doc --open --no-deps --package cli"

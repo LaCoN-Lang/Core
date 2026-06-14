@@ -1,0 +1,14 @@
+{
+	"recommendations":[
+		"alefragnani.project-manager",
+		"rust-lang.rust-analyzer",
+		"vadimcn.vscode-lldb",
+		"fill-labs.dependi",
+		"EditorConfig.EditorConfig",
+		"tamasfe.even-better-toml",
+		"JScearcy.rust-doc-viewer",
+		"ZhangYue.rust-mod-generator",
+		"swellaby.vscode-rust-test-adapter",
+		"usernamehw.errorlens"
+	]
+}

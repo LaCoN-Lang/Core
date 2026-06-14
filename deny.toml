@@ -1,0 +1,22 @@
+[graph]
+all-features = true
+
+[advisories]
+unmaintained = 'workspace'
+
+[licenses]
+allow = ["MIT", "Apache-2.0"]
+exceptions = [{ allow = ["Unicode-3.0"], crate = "unicode-ident" }]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+
+[bans.workspace-dependencies]
+duplicates = 'deny'
+include-path-dependencies = true
+unused = 'deny'
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

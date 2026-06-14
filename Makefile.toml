@@ -1,0 +1,61 @@
+[tasks.wasm-build]
+workspace = false
+command = "wasm-pack"
+args = [
+  "build",
+  "lacon-workspace/wasm",
+  "--target",
+  "nodejs",
+  "--out-dir",
+  "../../dist/wasm",
+  "--release",
+  "--no-pack",
+]
+[tasks.wasm-build.env]
+WASM_OPT_FLAGS = "--enable-bulk-memory --enable-mutable-globals --enable-simd"
+RUSTFLAGS = "-C target-feature=+bulk-memory,+mutable-globals"
+
+[tasks.lsp-build]
+workspace = false
+script = [
+  "cargo build -p lacon-lsp --release",
+  "cp dist/target/release/lacon-lsp.exe dist/lacon-lsp.exe",
+]
+
+[tasks.lsp-build.env]
+RUSTFLAGS = "-C target-cpu=native"
+
+
+[tasks.lsp-build-for-windows]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cargo build -p lacon-lsp --release --target x86_64-pc-windows-msvc
+exec cp dist/target/x86_64-pc-windows-msvc/release/lacon-lsp.exe dist/lacon-lsp-windows.exe
+'''
+
+[tasks.lsp-build-for-linux]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cargo zigbuild -p lacon-lsp --release --target x86_64-unknown-linux-gnu
+exec cp dist/target/x86_64-unknown-linux-gnu/release/lacon-lsp dist/lacon-lsp-linux
+exec strip dist/lacon-lsp-linux
+'''
+
+[tasks.lsp-build-for-macos]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cargo zigbuild -p lacon-lsp --release --target x86_64-apple-darwin
+exec cp dist/target/x86_64-apple-darwin/release/lacon-lsp dist/lacon-lsp-macos
+exec strip dist/lacon-lsp-macos
+'''
+
+[tasks.lsp-build-all]
+workspace = false
+dependencies = [
+  "lsp-build-for-windows",
+  "lsp-build-for-linux",
+  "lsp-build-for-macos",
+]

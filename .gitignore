@@ -1,0 +1,17 @@
+node_modules
+Cargo.lock
+.env
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+**/target/
+dist/
+*.pdb
+*.exe
+
+.DS_Store
+Thumbs.db
+**/*.log
+
+**/_logs/

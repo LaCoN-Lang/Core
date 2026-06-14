@@ -1,0 +1,50 @@
+[workspace]
+members = ["crates/*", "test/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+authors = ["Yalla Nkardaz"]
+license = "MIT"
+categories = ["compilers", "parser-implementations"]
+keywords = ["LaCoN"]
+homepage = "https://github.com/LaCoN-Lang"
+repository = "https://github.com/LaCoN-Lang/Core"
+
+[workspace.dependencies]
+# Local Workspace Packages
+engine = { path = "crates/engine", version = "0.1.0" }
+
+# Regular Expressions
+regress  = "^0.11.1"
+
+# Parsing and Text Processing
+phf = { version = "0.13.1", features = ["macros"] }
+
+# Memory and Data Structures
+bitflags = "^2"
+bumpalo = "^3"
+lazy_static = "^1"
+
+# Serialization
+serde = { version = "^1.0", features = ["derive"] }
+serde_json = "^1.0"
+
+# WebAssembly
+wasm-bindgen = "^0.2"
+serde-wasm-bindgen = "^0.6"
+js-sys = "^0.3"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+collapsible_if = "warn"

@@ -1,0 +1,26 @@
+[package]
+name = "engine"
+description = "LaCoN Engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+bitflags.workspace = true
+phf.workspace = true
+lazy_static.workspace = true
+
+# Regular Expressions
+regress.workspace = true
+
+[lints]
+workspace = true

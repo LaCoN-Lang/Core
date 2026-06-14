@@ -1,0 +1,11 @@
+max_width = 128
+
+hard_tabs = true
+tab_spaces = 1
+
+newline_style = "Unix"
+
+space_around_operator = true
+
+reorder_imports = true
+merge_imports = true
