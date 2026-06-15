@@ -17,7 +17,6 @@ pub enum OperatorKind {
 	Colon,
 	Tilde,
 	Circumflex,
-	Underscore,
 
 	PlusPlus,
 	PlusEqual,

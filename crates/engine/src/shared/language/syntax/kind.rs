@@ -1,5 +1,5 @@
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum SyntaxKind {
 	LeftParenthesis,  // (  \\ GroupStart
 	RightParenthesis, // )  \\ GroupEnd
@@ -15,7 +15,7 @@ pub enum SyntaxKind {
 	Semicolon, // ;
 	Comma,     // ,
 
-	Backslash, // \  \\ Escape or Difference
+	Backslash, // \
 
 	Dollar, // $
 	At,     // @

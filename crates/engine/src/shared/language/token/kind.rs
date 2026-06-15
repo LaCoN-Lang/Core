@@ -1,11 +1,11 @@
-use super::super::{KeywordKind, OperatorKind, SyntaxKind};
+use super::super::{KeywordKind, OperatorKind, SyntaxKind, NumberKind};
 // use crate::shared::UnitKind;
 
 #[repr(u8)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TokenKind {
 	// ─────────────────────────────────────────────
-	// Служебные
+	// Service
 	// ─────────────────────────────────────────────
 	Illegal,
 	Invalid, // \\ InvalidToken
@@ -21,11 +21,8 @@ pub enum TokenKind {
 	CarriageReturn, // \r \\ CarriageReturn
 	Indent(u8),     // →  \\ IndentIncrease
 	Dedent(u8),     // ←  \\ IndentDecrease
-	SectionMaker,   // §  \\ Scope
 
 	Underscore, // _  \\ Wildcard
-
-	Expression, // \\ Some / Some * Soma + Some...
 
 	// ─────────────────────────────────────────────
 	// Literals and identifiers
@@ -34,14 +31,12 @@ pub enum TokenKind {
 	Keyword(KeywordKind),   // let \\ Keyword
 	Operator(OperatorKind), // + \\ Operator
 	Syntax(SyntaxKind),     // ( \\ Syntax
-	Number,                 // 123  \\ NumericLiteral
+	Number(NumberKind),                 // 123  \\ NumericLiteral
 	String,                 // " "  \\ StringLiteral
-	Placeholder,            // _    \\ Placeholder / PartialApply
-	// Unit(UnitKind),
 
 	// ─────────────────────────────────────────────
 	// Comments
 	// ─────────────────────────────────────────────
-	LineComment,  // //   \\ LineComment
+	LineComment,  // /#   \\ LineComment
 	BlockComment, // /* */\\ BlockComment
 }
