@@ -19,6 +19,9 @@ bitflags.workspace = true
 phf.workspace = true
 lazy_static.workspace = true
 
+# Code Generation and Enums
+paste.workspace = true
+
 # Regular Expressions
 regress.workspace = true
 

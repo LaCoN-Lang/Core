@@ -143,7 +143,6 @@ pub enum KeywordKind {
     Sorted,
     Unsorted,
     Unique,
-    NotUnique,
 		Mutable,
 		Immutable,
 		Lazy,

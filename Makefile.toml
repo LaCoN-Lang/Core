@@ -1,61 +1,79 @@
-[tasks.wasm-build]
+[tasks.engine]
 workspace = false
-command = "wasm-pack"
-args = [
-  "build",
-  "lacon-workspace/wasm",
-  "--target",
-  "nodejs",
-  "--out-dir",
-  "../../dist/wasm",
-  "--release",
-  "--no-pack",
-]
-[tasks.wasm-build.env]
-WASM_OPT_FLAGS = "--enable-bulk-memory --enable-mutable-globals --enable-simd"
-RUSTFLAGS = "-C target-feature=+bulk-memory,+mutable-globals"
+command = "cargo"
+args = ["build", "--release", "--package", "engine"]
 
-[tasks.lsp-build]
-workspace = false
-script = [
-  "cargo build -p lacon-lsp --release",
-  "cp dist/target/release/lacon-lsp.exe dist/lacon-lsp.exe",
-]
+# ─────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────
 
-[tasks.lsp-build.env]
-RUSTFLAGS = "-C target-cpu=native"
-
-
-[tasks.lsp-build-for-windows]
+[tasks.cli-win]
 workspace = false
 script_runner = "@duckscript"
 script = '''
-exec cargo build -p lacon-lsp --release --target x86_64-pc-windows-msvc
-exec cp dist/target/x86_64-pc-windows-msvc/release/lacon-lsp.exe dist/lacon-lsp-windows.exe
+exec cargo build --release --package cli --target x86_64-pc-windows-msvc
 '''
 
-[tasks.lsp-build-for-linux]
+[tasks.cli-linux]
 workspace = false
 script_runner = "@duckscript"
 script = '''
-exec cargo zigbuild -p lacon-lsp --release --target x86_64-unknown-linux-gnu
-exec cp dist/target/x86_64-unknown-linux-gnu/release/lacon-lsp dist/lacon-lsp-linux
-exec strip dist/lacon-lsp-linux
+exec cross build --release --package cli --target x86_64-unknown-linux-gnu
 '''
 
-[tasks.lsp-build-for-macos]
-workspace = false
-script_runner = "@duckscript"
-script = '''
-exec cargo zigbuild -p lacon-lsp --release --target x86_64-apple-darwin
-exec cp dist/target/x86_64-apple-darwin/release/lacon-lsp dist/lacon-lsp-macos
-exec strip dist/lacon-lsp-macos
-'''
-
-[tasks.lsp-build-all]
+[tasks.cli]
 workspace = false
 dependencies = [
-  "lsp-build-for-windows",
-  "lsp-build-for-linux",
-  "lsp-build-for-macos",
+    "cli-win",
+    "cli-linux",
 ]
+
+# ─────────────────────────────────────────────
+# LSP
+# ─────────────────────────────────────────────
+
+[tasks.lsp-win]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cargo build --release --package lsp --target x86_64-pc-windows-msvc
+'''
+
+[tasks.lsp-linux]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cross build --release --package lsp --target x86_64-unknown-linux-gnu
+'''
+
+[tasks.lsp]
+workspace = false
+dependencies = [
+    "lsp-win",
+    "lsp-linux",
+]
+
+# ─────────────────────────────────────────────
+# WASM
+# ─────────────────────────────────────────────
+
+[tasks.wasm]
+workspace = false
+script_runner = "@duckscript"
+script = '''
+exec cargo build --release --package wasm --target wasm32-unknown-unknown
+'''
+
+# ─────────────────────────────────────────────
+# All
+# ─────────────────────────────────────────────
+
+[tasks.all]
+workspace = false
+dependencies = [
+    "engine",
+    "cli",
+    "wasm",
+    "lsp",
+]
+
