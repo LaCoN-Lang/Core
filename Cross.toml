@@ -1,0 +1,4 @@
+[build]
+xargo = false
+rustup = false
+toolchain = "1.89.0"
