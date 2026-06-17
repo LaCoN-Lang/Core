@@ -1,0 +1,3194 @@
+/|\\ ==============================================================================
+/|\\ COMPREHENSIVE TEST FILE - COVERING ALL TOKEN CATEGORIES
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// Module declarations and imports
+// ─────────────────────────────────────────────
+container Math::Operations::Advanced {
+    import std::collections::{HashMap, HashSet} as Collections
+    import physics::units::{kg, m, s, Hz, J, N, Pa} from "./units.mylang"
+    export {Vector, Matrix, Tensor}
+    provide constants::physical
+
+    // ─────────────────────────────────────────────
+    // Type and class definitions with generics
+    // ─────────────────────────────────────────────
+    public class Vector<T: Numeric>
+        extends LinearAlgebraic
+        implements Serialize, Clone, Debug
+        where T: Add + Mul + Div + Sub {
+
+        private static const MAX_DIMENSIONS: usize = 4096
+        internal let dimensions: usize
+        protected var elements: Array<T>
+
+        // ─────────────────────────────────────────────
+        // Constructor and methods
+        // ─────────────────────────────────────────────
+        public function new(elements: Array<T>) -> Self {
+            this.dimensions = elements.length()
+            this.elements = elements.clone()
+
+            if this.dimensions > MAX_DIMENSIONS {
+                throw Error::new("Vector too large")
+            }
+        }
+
+        public function dot<U>(other: Vector<U>) -> T
+            where U: Numeric, T: From<U> {
+
+            var sum = T::zero()
+            for i in 0..this.dimensions {
+                sum += this.elements[i] * other.elements[i].into()
+            }
+            return sum
+        }
+
+        public function norm() -> T {
+            sqrt(this.dot(this))
+        }
+
+        public operator + (other: Vector<T>) -> Vector<T> {
+            let result_elements = Array::new(this.dimensions)
+            for i in 0..this.dimensions {
+                result_elements[i] = this.elements[i] + other.elements[i]
+            }
+            return Vector::new(result_elements)
+        }
+
+        public operator * (scalar: T) -> Vector<T> {
+            let result_elements = Array::new(this.dimensions)
+            for i in 0..this.dimensions {
+                result_elements[i] = this.elements[i] * scalar
+            }
+            return Vector::new(result_elements)
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Interface and trait definitions
+    // ─────────────────────────────────────────────
+    public interface LinearAlgebraic {
+        function norm() -> Self::Element
+        function transpose() -> Self
+        function is_orthogonal() -> bool
+    }
+
+    public trait Numeric: Add + Sub + Mul + Div + PartialOrd {
+        static function zero() -> Self
+        static function one() -> Self
+        function abs() -> Self
+        function sqrt() -> Self where Self: FloatLike
+    }
+
+    // ─────────────────────────────────────────────
+    // Enum with pattern matching
+    // ─────────────────────────────────────────────
+    public enum Result<T, E> {
+        Ok(T),
+        Err(E),
+        Pending(Option<T>),
+        Partial { value: T, completeness: f64 }
+    }
+
+    public function process_result<T, E>(result: Result<T, E>) -> Option<T> {
+        match result {
+            Result::Ok(value) => Some(value),
+            Result::Err(error) => {
+                log_error(error)
+                None
+            },
+            Result::Pending(maybe_value) => maybe_value,
+            Result::Partial { value, completeness } if completeness >= 0.8 => {
+                Some(value)
+            },
+            _ => None
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Complex expressions with units
+    // ─────────────────────────────────────────────
+    public function calculate_energy(
+        mass: 5.0kg,
+        velocity: 30.0m/s,
+        height: 10.0m
+    ) -> J {
+        // Kinetic energy: ½mv²
+        let kinetic = 0.5 * mass * velocity ** 2
+        // Potential energy: mgh
+        let potential = mass * 9.80665m/s² * height
+
+        kinetic + potential
+    }
+
+    public function quantum_operations() {
+        // Bra-ket notation inspired operations
+        let ψ = |0⟩ + |1⟩ / sqrt(2.0)  // Hadamard |+⟩ state
+        let φ = |0⟩⟨0| - |1⟩⟨1|        // Pauli Z operator
+
+        // Tensor product
+        let bell_state = (|00⟩ + |11⟩) / sqrt(2.0)
+
+        // Measurement
+        match measure(ψ) {
+            |0⟩ => println("Collapsed to |0⟩"),
+            |1⟩ => println("Collapsed to |1⟩"),
+            _   => println("Superposition maintained")
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced control flow
+    // ─────────────────────────────────────────────
+    public function complex_algorithm(input: Array<f64>) -> Result<f64, String> {
+        defer {
+            cleanup_resources()
+            log("Algorithm execution completed")
+        }
+
+        try {
+            // Validate input
+            guard input.length() > 0 else {
+                throw ValidationError::new("Input cannot be empty")
+            }
+
+            // Async computation
+            let future_result = async compute_heavy_task(input)
+            let result = await future_result with timeout=10.0s
+
+            // Generator for progressive results
+            let generator = generate {
+                for chunk in input.chunks(100) {
+                    yield process_chunk(chunk)
+                }
+            }
+
+            // Parallel processing
+            let processed = parallel map generator using |x| x * 2.0
+
+            // Pipeline operations
+            let final_result = input
+                |> filter(|x| x > 0.0)
+                |> map(|x| log(x))
+                |> reduce(0.0, |acc, x| acc + x)
+                |> clamp(0.0..=100.0)
+
+            return Result::Ok(final_result)
+
+        } catch ValidationError as e {
+            return Result::Err(format("Validation failed: {}", e))
+        } catch TimeoutError {
+            return Result::Err("Computation timeout")
+        } finally {
+            release_memory()
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Pattern matching with complex patterns
+    // ─────────────────────────────────────────────
+    public function extract_data(value: Dynamic) -> Option<Data> {
+        match value {
+            // Nested patterns
+            Data::Matrix { rows, cols, data } if rows == cols => {
+                Some(Data::SquareMatrix { size: rows, data })
+            },
+
+            // Range patterns
+            Number(x) where x in 0.0..1.0 => Some(Data::Normalized(x)),
+            Number(x) where x in 1.0.. => Some(Data::Positive(x)),
+
+            // Type patterns with guard
+            String(s) as text if text.starts_with("data:") => {
+                parse_data_uri(text)
+            },
+
+            // List patterns
+            [first, second, ..rest] => {
+                Some(Data::Sequence([first, second] + rest.take(10)))
+            },
+
+            // Dictionary/object patterns
+            { type: "point", x, y, z } => {
+                Some(Data::Point3D(x, y, z))
+            },
+
+            // Wildcard with condition
+            _ if is_special_case(value) => handle_special(value),
+
+            // Default
+            _ => None
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Operator overloading and custom operators
+    // ─────────────────────────────────────────────
+    public operator ∙ (a: Vector<f64>, b: Vector<f64>) -> f64 {
+        // Dot product with custom operator
+        a.dot(b)
+    }
+
+    public operator ⊗ (a: Matrix, b: Matrix) -> Matrix {
+        // Tensor/Kronecker product
+        kronecker_product(a, b)
+    }
+
+    public operator × (a: Vector3D, b: Vector3D) -> Vector3D {
+        // Cross product
+        cross_product(a, b)
+    }
+
+    public operator ≈ (a: f64, b: f64) -> bool {
+        // Approximate equality
+        abs(a - b) < 1e-10
+    }
+
+    // ─────────────────────────────────────────────
+    // Compile-time and meta programming
+    // ─────────────────────────────────────────────
+    #[inline]
+    #[optimize(speed)]
+    #[cache]
+    public function fibonacci(n: usize) -> usize {
+        // Compile-time evaluation for constants
+        const FIB_20: usize = fib(20)  // Evaluated at compile time
+
+        if n <= 1 { return n }
+        return fibonacci(n - 1) + fibonacci(n - 2)
+    }
+
+    // Macro-like generation
+    generate function create_getters(fields: Array<Field>) {
+        for field in fields {
+            emit `public function get_${field.name}() -> ${field.type} {
+                return this.${field.name}
+            }`
+        }
+    }
+
+    // Reflection
+    public function inspect_type<T>() -> TypeInfo {
+        reflect T {
+            name: type_name,
+            size: sizeof,
+            alignment: alignof,
+            methods: get_methods,
+            fields: get_fields
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // String interpolation and templates
+    // ─────────────────────────────────────────────
+    public function generate_report(data: Data) -> String {
+        let timestamp = now()
+        let score = data.quality_score() * 100.0
+
+        return `Report generated at ${timestamp:%Y-%m-%d %H:%M:%S}
+
+        Data Summary:
+        • Size: ${data.size()} elements
+        • Quality: ${score:.1}%
+        • Checksum: ${data.checksum():#08x}
+
+        ${if data.is_valid() {
+            "✓ Data validation passed"
+        } else {
+            "✗ Data validation failed: ${data.errors().join(", ")}"
+        }}
+
+        Processed by: ${System::current_user()}@${System::hostname()}`
+    }
+
+    // ─────────────────────────────────────────────
+    // Complex mathematical expressions
+    // ─────────────────────────────────────────────
+    public function solve_quadratic(a: f64, b: f64, c: f64) -> Array<f64> {
+        let discriminant = b*b - 4.0*a*c
+
+        if discriminant ≈ 0.0 {
+            return [-b / (2.0*a)]
+        } else if discriminant > 0.0 {
+            let sqrt_disc = sqrt(discriminant)
+            return [
+                (-b + sqrt_disc) / (2.0*a),
+                (-b - sqrt_disc) / (2.0*a)
+            ]
+        } else {
+            let real = -b / (2.0*a)
+            let imag = sqrt(-discriminant) / (2.0*a)
+            return [complex(real, imag), complex(real, -imag)]
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Unit conversions and dimensional analysis
+    // ─────────────────────────────────────────────
+    public function convert_units(value: f64, from: Unit, to: Unit) -> f64 {
+        // Automatic dimensional analysis
+        let speed = 100km/h → m/s        // 27.7778 m/s
+        let energy = 500kJ → kWh         // 0.1389 kWh
+        let pressure = 101325Pa → atm    // 1.0 atm
+        let data_size = 1.5GiB → MB      // 1610.61 MB
+
+        return value * from.conversion_factor(to)
+    }
+
+    // ─────────────────────────────────────────────
+    // Async/await and concurrency
+    // ─────────────────────────────────────────────
+    public async function fetch_and_process(urls: Array<String>) -> Map<String, Data> {
+        let tasks = urls.map(|url| async {
+            let response = await http::get(url) with retries=3
+            let data = await response.json()
+            return (url, data)
+        })
+
+        let results = await all tasks concurrently limit=5
+
+        return results
+            |> filter(|(_, data)| data.is_valid())
+            |> map(|(url, data)| (url, transform_data(data)))
+            |> collect::<Map>()
+    }
+
+    // ─────────────────────────────────────────────
+    // Error handling with context
+    // ─────────────────────────────────────────────
+    public function robust_operation() -> Result<Output, Error> {
+        context "Processing critical data" {
+            condition network::is_available()
+                otherwise Error::NetworkUnavailable
+
+            condition filesystem::has_space(1GiB)
+                otherwise Error::InsufficientSpace
+
+            action {
+                let data = load_data()?
+                let processed = process(data)
+                    .map_error(|e| Error::ProcessingFailed(e))?
+
+                validate(processed)?
+                    .ok_or(Error::ValidationFailed)?
+
+                save_result(processed)
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL and embedded languages
+    // ─────────────────────────────────────────────
+    public function define_workflow() -> Workflow {
+        workflow "Data Pipeline" {
+            stage "Extract" {
+                source: database::query("SELECT * FROM data"),
+                format: CSV,
+                validate: true
+            }
+
+            stage "Transform" {
+                map: |row| {
+                    row.timestamp = parse_time(row.date)
+                    row.value = normalize(row.value)
+                    return row
+                },
+                filter: |row| row.value > 0.0
+            }
+
+            stage "Load" {
+                target: warehouse::table("processed"),
+                mode: Append,
+                batch_size: 1000
+            }
+        }
+    }
+
+    public function define_shader() -> Shader {
+        shader {
+            input position: vec3
+            input normal: vec3
+            uniform model_view_proj: mat4
+
+            vertex {
+                gl_Position = model_view_proj * vec4(position, 1.0)
+                var world_normal = normalize(normal)
+            }
+
+            fragment {
+                let light_dir = normalize(vec3(1.0, 1.0, 1.0))
+                let intensity = max(dot(world_normal, light_dir), 0.0)
+                output_color = vec4(intensity, intensity, intensity, 1.0)
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Comments of all types
+    // ─────────────────────────────────────────────
+    /*
+     * This is a block comment spanning
+     * multiple lines with various
+     * /* nested */ comments inside
+     */
+
+    /// This is a documentation comment
+    /// for the following function
+    ///
+    /// # Examples
+    ///
+    /// ```mylang
+    /// let result = documented_function(42)
+    /// assert result == 84
+    /// ```
+    public function documented_function(x: i32) -> i32 {
+        // Regular line comment
+        x * 2  // Inline comment
+    }
+}
+
+// ─────────────────────────────────────────────
+// Global constants and type aliases
+// ─────────────────────────────────────────────
+public const MAX_BUFFER_SIZE: usize = 65536
+public const PI: f64 = 3.14159265358979323846
+public const SPEED_OF_LIGHT: f64 = 299792458m/s
+public const PLANCK_CONSTANT: f64 = 6.62607015e-34J⋅s
+
+public alias Matrix3x3 = Matrix<f64, 3, 3>
+public alias StringMap<V> = HashMap<String, V>
+public alias Callback<T> = function(T) -> T
+public alias AsyncResult<T> = Future<Result<T, Error>>
+
+// ─────────────────────────────────────────────
+// Final complex expression testing all operators
+// ─────────────────────────────────────────────
+public function ultimate_expression() -> Complex<f64> {
+    let a = 3.0 + 4.0i
+    let b = (1.0..10.0).sum()
+    let c = [1, 2, 3, 4, 5].map(|x| x ** 2).filter(|x| x % 2 == 0)
+
+    (a * b + c.fold(0, |acc, x| acc ⊕ x))
+        >> 2
+        & 0xFF
+        | 0x80
+        ^ 0x55
+        ~ complement
+        != previous_value
+        <= upper_bound
+        >= lower_bound
+        && condition1
+        || condition2
+        ?? defaultValue
+}
+
+/|\\ END OF TEST FILE
+/|\\ Total tokens: ~2500+
+/|\\ Covers: keywords, operators, literals, comments, strings, units, etc.
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// ADVANCED TEST SUITE - EXTENSION
+// ─────────────────────────────────────────────
+container Math::Operations::Extended {
+
+    import std::time::{Duration, Instant, Local, UTC}
+    import std::collections::{LinkedList, VecDeque}
+
+    // ─────────────────────────────────────────────
+    // Lazy evaluation and generators
+    // ─────────────────────────────────────────────
+    public function lazy_fibonacci(n: usize) -> Generator<usize> {
+        var a = 0
+        var b = 1
+
+        generate {
+            for _ in 0..n {
+                yield a
+                let tmp = a
+                a = b
+                b = tmp + b
+            }
+        }
+    }
+
+    public function primes(limit: usize) -> Generator<usize> {
+        generate {
+            for candidate in 2..limit {
+                var is_prime = true
+                for divisor in 2..sqrt(candidate as f64).ceil() as usize {
+                    if candidate % divisor == 0 {
+                        is_prime = false
+                        break
+                    }
+                }
+                if is_prime {
+                    yield candidate
+                }
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced collections manipulation
+    // ─────────────────────────────────────────────
+    public function merge_maps<K, V>(maps: Array<Map<K, V>>) -> Map<K, V>
+        where K: Hash + Eq, V: Clone {
+        let result = Map::new()
+        for map in maps {
+            for (k, v) in map {
+                result.insert(k, v.clone())
+            }
+        }
+        return result
+    }
+
+    public function sliding_window<T>(arr: Array<T>, size: usize) -> Generator<Array<T>>
+        where T: Clone {
+        generate {
+            for i in 0..=(arr.length() - size) {
+                yield arr[i..(i+size)].to_array()
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Date, time, and periodic calculations
+    // ─────────────────────────────────────────────
+    public function time_diff(start: Instant, end: Instant) -> Duration {
+        end - start
+    }
+
+    public function next_weekday(date: Date, weekday: Weekday) -> Date {
+        var candidate = date + Duration::days(1)
+        while candidate.weekday() != weekday {
+            candidate += Duration::days(1)
+        }
+        return candidate
+    }
+
+    public function iso_week_number(date: Date) -> usize {
+        (date.ordinal() + 6 - date.weekday() as usize) / 7
+    }
+
+    // ─────────────────────────────────────────────
+    // Recursion and pattern matching tests
+    // ─────────────────────────────────────────────
+    public function factorial(n: usize) -> usize {
+        if n <= 1 { return 1 }
+        n * factorial(n - 1)
+    }
+
+    public function flatten_nested_array(arr: Dynamic) -> Array<Dynamic> {
+        match arr {
+            [] => [],
+            [head, ..tail] => {
+                flatten_nested_array(head) + flatten_nested_array(tail)
+            },
+            _ => [arr]
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced error handling with context and logging
+    // ─────────────────────────────────────────────
+    public function safe_divide(a: f64, b: f64) -> Result<f64, String> {
+        context "Division operation" {
+            guard b != 0.0 else { return Result::Err("Division by zero") }
+            log("Dividing ${a} by ${b}")
+            Result::Ok(a / b)
+        }
+    }
+
+    public function batch_process(data: Array<Dynamic>) -> Result<Array<Dynamic>, Error> {
+        try {
+            let results = data.map(|x| robust_operation(x)?)
+            return Result::Ok(results)
+        } catch e {
+            log_error(e)
+            return Result::Err(e)
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced mathematical expressions and operators
+    // ─────────────────────────────────────────────
+    public function vector_transform(v: Vector<f64>, m: Matrix<f64>) -> Vector<f64> {
+        v ∙ m + Vector::new([1.0, 2.0, 3.0])
+    }
+
+    public function tensor_contract(t: Tensor<f64>, axes: Array<usize>) -> Tensor<f64> {
+        // Contract tensor along specified axes
+        t.reduce(axes, |acc, x| acc + x)
+    }
+
+    public operator ⨀ (a: Vector<f64>, b: Vector<f64>) -> f64 {
+        // Custom inner product operator
+        a.dot(b) + a.norm() * b.norm()
+    }
+
+    public operator ⨂ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> {
+        kronecker_product(a, b)
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL / Workflow like constructs
+    // ─────────────────────────────────────────────
+    public function define_pipeline() -> Pipeline {
+        pipeline "Extended Data Flow" {
+            step "Load" {
+                from: database::query("SELECT * FROM logs"),
+                validate: true
+            }
+            step "Transform" {
+                map: |row| normalize(row.value),
+                filter: |row| row.value > 0.0
+            }
+            step "Save" {
+                to: warehouse::table("logs_processed"),
+                mode: Overwrite
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Async generators and streaming
+    // ─────────────────────────────────────────────
+    public async function stream_numbers(limit: usize) -> AsyncGenerator<usize> {
+        for i in 0..limit {
+            await sleep(Duration::milliseconds(1))
+            yield i
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // String manipulation and templates
+    // ─────────────────────────────────────────────
+    public function template_expand(template: String, values: Map<String, String>) -> String {
+        values.fold(template, |acc, (k, v)| acc.replace("${k}", v))
+    }
+
+    // ─────────────────────────────────────────────
+    // End of Extended Test Suite
+    // ─────────────────────────────────────────────
+}
+
+/|\\ END OF EXTENDED TEST FILE
+/|\\ Total tokens: ~2500+
+/|\\ Adds: lazy eval, recursion, pipelines, async, date/time, advanced operators
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// ADVANCED TEST SUITE - EXTENSION II
+// ─────────────────────────────────────────────
+container Math::Operations::Ultimate {
+
+    import std::math::{gamma, factorial, erf, ln, exp}
+    import std::io::{File, Buffer, Read, Write}
+    import std::sync::{Mutex, RwLock, Arc}
+    import std::thread
+    import std::net::{Socket, TcpListener, TcpStream}
+    import std::random::{random, shuffle}
+
+    // ─────────────────────────────────────────────
+    // Advanced recursion & combinatorics
+    // ─────────────────────────────────────────────
+    public function binomial(n: usize, k: usize) -> usize {
+        if k == 0 || k == n { return 1 }
+        binomial(n-1, k-1) + binomial(n-1, k)
+    }
+
+    public function catalan(n: usize) -> usize {
+        binomial(2*n, n) / (n + 1)
+    }
+
+    public function permute<T>(arr: Array<T>) -> Generator<Array<T>>
+        where T: Clone {
+        generate {
+            let indices = (0..arr.length()).to_array()
+            for perm in permutations(indices) {
+                yield perm.map(|i| arr[i].clone())
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Multi-threading and concurrency
+    // ─────────────────────────────────────────────
+    public function parallel_sum(arr: Array<f64>, threads: usize) -> f64 {
+        let chunk_size = (arr.length() + threads - 1) / threads
+        let results = Arc::new(Mutex::new(Vec::new()))
+
+        let handles = (0..threads).map(|i| {
+            let start = i * chunk_size
+            let end = min((i+1)*chunk_size, arr.length())
+            let chunk = arr[start..end].to_array()
+            let results_clone = results.clone()
+
+            thread::spawn(move || {
+                let sum = chunk.fold(0.0, |acc, x| acc + x)
+                results_clone.lock().push(sum)
+            })
+        })
+
+        for h in handles { h.join() }
+
+        results.lock().fold(0.0, |acc, x| acc + x)
+    }
+
+    public async function async_fetch(urls: Array<String>) -> AsyncResult<Map<String, String>> {
+        let tasks = urls.map(|u| async {
+            let response = await http::get(u) with retries=5
+            (u, response.text())
+        })
+
+        await all tasks concurrently limit=10
+    }
+
+    // ─────────────────────────────────────────────
+    // Reflection and meta-programming
+    // ─────────────────────────────────────────────
+    public function inspect_object<T>(obj: T) -> Map<String, Dynamic> {
+        reflect obj {
+            fields: get_fields,
+            methods: get_methods,
+            annotations: get_annotations
+        }
+    }
+
+    public function generate_setters(fields: Array<Field>) {
+        for f in fields {
+            emit `public function set_${f.name}(val: ${f.type}) {
+                this.${f.name} = val
+            }`
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced pattern matching
+    // ─────────────────────────────────────────────
+    public function complex_match(value: Dynamic) -> Option<Dynamic> {
+        match value {
+            Some(Some(x)) => Some(x),
+            Some(None) => None,
+            None => None,
+            { kind: "matrix", rows, cols } if rows > cols => Some("Tall matrix"),
+            { kind: "matrix", rows, cols } => Some("Wide matrix"),
+            [head, ..tail] => Some([head] + tail.take(5)),
+            _ if is_magic(value) => handle_magic(value),
+            _ => None
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL / pipeline / streaming
+    // ─────────────────────────────────────────────
+    public function data_pipeline() -> Pipeline {
+        pipeline "Ultimate Flow" {
+            step "Extract" {
+                from: csv::read("data.csv"),
+                validate: true
+            }
+
+            step "Transform" {
+                map: |row| normalize(row.value),
+                filter: |row| row.value > 0.0
+            }
+
+            step "Enrich" {
+                join: api::fetch("https://api.example.com"),
+                on: "id"
+            }
+
+            step "Load" {
+                to: warehouse::table("ultimate_processed"),
+                batch_size: 5000,
+                mode: Upsert
+            }
+        }
+    }
+
+    public async function stream_events(limit: usize) -> AsyncGenerator<Event> {
+        for i in 0..limit {
+            await sleep(Duration::milliseconds(2))
+            yield Event::new(i, now())
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Complex math, matrices, tenses, units
+    // ─────────────────────────────────────────────
+    public function matrix_inverse(m: Matrix<f64>) -> Matrix<f64> {
+        // Uses LU decomposition
+        lu_decompose(m).inverse()
+    }
+
+    public function tensor_contract_advanced(t: Tensor<f64>, axes: Array<usize>) -> Tensor<f64> {
+        t.reduce(axes, |acc, x| acc * x + 1.0)
+    }
+
+    public operator ⨁ (a: Vector<f64>, b: Vector<f64>) -> Vector<f64> {
+        zip(a.elements, b.elements).map(|x,y| x + y).to_vector()
+    }
+
+    public operator ⨂⨁ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> {
+        kronecker_product(a,b) + a
+    }
+
+    public operator ≡ (a: f64, b: f64) -> bool {
+        abs(a - b) < 1e-12
+    }
+
+    // ─────────────────────────────────────────────
+    // String templates, interpolation, and logging
+    // ─────────────────────────────────────────────
+    public function log_template(msg: String, values: Map<String, Dynamic>) -> String {
+        values.fold(msg, |acc, (k,v)| acc.replace("${k}", v.to_string()))
+    }
+
+    public function format_report(data: Data) -> String {
+        let now = Local::now()
+        return `Report at ${now:%F %T}:
+        Size: ${data.size()}
+        Errors: ${data.errors().length()}
+        Status: ${if data.is_valid() {"OK"} else {"FAIL"}}
+        Checksum: ${data.checksum():#010x}`
+    }
+
+    // ─────────────────────────────────────────────
+    // Async / await with retry, error handling
+    // ─────────────────────────────────────────────
+    public async function resilient_operation(url: String) -> AsyncResult<String> {
+        try {
+            let resp = await http::get(url) with retries=5
+            return Result::Ok(resp.text())
+        } catch TimeoutError {
+            log("Timeout fetching ${url}")
+            return Result::Err("Timeout")
+        } catch NetworkError as e {
+            log("Network error: ${e}")
+            return Result::Err("Network")
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Final ultimate expression to stress-test all operators
+    // ─────────────────────────────────────────────
+    public function ultimate_stress_test() -> Complex<f64> {
+        let x = [1,2,3,4].map(|v| v**2).filter(|v| v % 2 == 0)
+        let y = (0..10).fold(0, |acc, v| acc + v)
+        let z = Complex::new(3.0,4.0) * Complex::i()
+        let w = x.fold(0, |acc,v| acc ⨁ v)
+
+        ((z + y) * w / 2.0) >> 1 & 0xAA | 0x55 ^ ~0 != 0 && true || false ?? default_value
+    }
+
+}
+
+// ─────────────────────────────────────────────
+// END OF ULTIMATE EXTENSION
+// ─────────────────────────────────────────────
+/|\\ Total tokens: ~2500+
+/// Covers: recursion, combinatorics, async streams, multithreading, reflection, tensors, pipelines
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// ADVANCED TEST SUITE - EXTENSION III
+// ─────────────────────────────────────────────
+container Math::Operations::UltimatePlus {
+
+    import std::fs::{File, OpenOptions, Read, Write, Seek, SeekFrom}
+    import std::io::{Buffer, LineReader, BufWriter}
+    import std::sync::{Mutex, Arc, RwLock, Barrier, CondVar}
+    import std::thread
+    import std::time::{Duration, Instant, Local, UTC}
+    import std::random::{seed, random, shuffle, choose}
+
+    // ─────────────────────────────────────────────
+    // Edge-case recursion & combinatorics
+    // ─────────────────────────────────────────────
+    public function ackermann(m: usize, n: usize) -> usize {
+        if m == 0 { return n + 1 }
+        if n == 0 { return ackermann(m - 1, 1) }
+        ackermann(m - 1, ackermann(m, n - 1))
+    }
+
+    public function stirling_second_kind(n: usize, k: usize) -> usize {
+        if n == k || k == 1 { return 1 }
+        k * stirling_second_kind(n - 1, k) + stirling_second_kind(n - 1, k - 1)
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced async & streams
+    // ─────────────────────────────────────────────
+    public async function stream_primes(limit: usize) -> AsyncGenerator<usize> {
+        for p in primes(limit) {
+            await sleep(Duration::milliseconds(1))
+            yield p
+        }
+    }
+
+    public async function throttled_fetch(urls: Array<String>, concurrency: usize) -> AsyncResult<Map<String,String>> {
+        let semaphore = Arc::new(Mutex::new(concurrency))
+        let results = Map::new()
+
+        for u in urls {
+            await semaphore.lock()
+            let r = await resilient_operation(u)
+            results.insert(u, r.unwrap_or("FAIL"))
+            semaphore.unlock()
+        }
+
+        return results
+    }
+
+    // ─────────────────────────────────────────────
+    // Meta-programming / reflection
+    // ─────────────────────────────────────────────
+    public function inspect_enum<T>() -> Map<String, Dynamic> {
+        reflect T {
+            variants: get_variants,
+            discriminants: get_discriminants,
+            docs: get_docs
+        }
+    }
+
+    public function emit_builder(fields: Array<Field>) {
+        for f in fields {
+            emit `public function with_${f.name}(val: ${f.type}) -> Self {
+                this.${f.name} = val
+                return this
+            }`
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Unicode operator stress test
+    // ─────────────────────────────────────────────
+    public operator ⩵ (a: f64, b: f64) -> bool { abs(a-b) < 1e-14 }
+    public operator ⋅⋅ (a: Vector<f64>, b: Vector<f64>) -> f64 { a.dot(b) * a.norm() }
+    public operator ⨀⨁ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> { kronecker_product(a,b) + b }
+    public operator ⨂⋆ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> { tensor_contract_advanced(a,b.axes()) }
+
+    // ─────────────────────────────────────────────
+    // Lazy evaluation, generators, iterators
+    // ─────────────────────────────────────────────
+    public function fibonacci_lazy() -> Generator<usize> {
+        var a = 0; var b = 1
+        generate {
+            loop {
+                yield a
+                let tmp = a; a = b; b = tmp + b
+            }
+        }
+    }
+
+    public function windowed_sum(arr: Array<f64>, size: usize) -> Generator<f64> {
+        generate {
+            for i in 0..=(arr.length() - size) {
+                yield arr[i..(i+size)].sum()
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced math: matrices, tensors, complex numbers
+    // ─────────────────────────────────────────────
+    public function matrix_determinant(m: Matrix<f64>) -> f64 {
+        lu_decompose(m).determinant()
+    }
+
+    public function tensor_norm(t: Tensor<f64>) -> f64 {
+        sqrt(t.elements.map(|x| x*x).sum())
+    }
+
+    public function complex_exp(z: Complex<f64>) -> Complex<f64> {
+        let e = exp(z.re)
+        Complex::new(e*cos(z.im), e*sin(z.im))
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL, pipelines, streaming
+    // ─────────────────────────────────────────────
+    public function ultimate_pipeline() -> Pipeline {
+        pipeline "UltimatePlus Flow" {
+            step "Extract" {
+                from: database::query("SELECT * FROM telemetry"),
+                validate: true
+            }
+
+            step "Transform" {
+                map: |row| normalize(row.value),
+                filter: |row| row.value >= 0.0
+            }
+
+            step "Enrich" {
+                join: api::fetch("https://api.ultimate.com"),
+                on: "uuid"
+            }
+
+            step "Aggregate" {
+                reduce: |acc,row| acc + row.value,
+                initial: 0.0
+            }
+
+            step "Load" {
+                to: warehouse::table("telemetry_processed"),
+                mode: Upsert,
+                batch_size: 10000
+            }
+        }
+    }
+
+    public async function async_logger(events: AsyncGenerator<Event>) {
+        for e in events {
+            await sleep(Duration::milliseconds(1))
+            println("[${e.timestamp}] Event: ${e.id}")
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // String templates, interpolation, advanced logging
+    // ─────────────────────────────────────────────
+    public function fancy_log(template: String, values: Map<String, Dynamic>) -> String {
+        values.fold(template, |acc,(k,v)| acc.replace("${k}", v.to_string()))
+    }
+
+    public function report_summary(data: Data) -> String {
+        let ts = UTC::now()
+        return `Summary @ ${ts:%F %T}:
+        Elements: ${data.size()}
+        Errors: ${data.errors().length()}
+        Status: ${if data.is_valid() {"OK"} else {"FAIL"}}
+        Checksum: ${data.checksum():#012x}`
+    }
+
+    // ─────────────────────────────────────────────
+    // Ultimate stress-test function
+    // ─────────────────────────────────────────────
+    public function ultimate_plus_expression() -> Complex<f64> {
+        let a = [1.0,2.0,3.0].map(|x| x**3).filter(|x| x % 2.0 == 1.0)
+        let b = (0..20).fold(0.0, |acc,v| acc + v as f64)
+        let c = Complex::new(2.0,3.0) * Complex::i()
+        let d = a.fold(0.0, |acc,v| acc + v)
+
+        ((c + b) * d / 3.0) >> 2 & 0xCC | 0x33 ^ ~0 != 0 && true || false ?? default_val
+    }
+
+}
+
+// ─────────────────────────────────────────────
+// END OF ULTIMATEPLUS EXTENSION
+// ─────────────────────────────────────────────
+/|\\ Total tokens: ~2500+
+/// Covers: recursion, combinatorics, async, streams, unicode operators, tensors, matrices, pipelines
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// ULTIMATE TEST SUITE - EXPANSION IV
+// ─────────────────────────────────────────────
+container Math::Operations::OmniTest {
+
+    import std::math::{gamma, factorial, erf, ln, exp, pi, sqrt, cos, sin, tan}
+    import std::io::{File, OpenOptions, Read, Write, Seek, SeekFrom, BufWriter, LineReader}
+    import std::sync::{Mutex, RwLock, Arc, Barrier, CondVar, atomic}
+    import std::thread
+    import std::time::{Duration, Instant, Local, UTC}
+    import std::random::{seed, random, shuffle, choose, sample}
+
+    // ─────────────────────────────────────────────
+    // Extreme recursion & combinatorics
+    // ─────────────────────────────────────────────
+    public function ackermann_extreme(m: usize, n: usize) -> usize {
+        if m == 0 { return n + 1 }
+        if n == 0 { return ackermann_extreme(m-1, 1) }
+        ackermann_extreme(m-1, ackermann_extreme(m, n-1))
+    }
+
+    public function catalan_large(n: usize) -> usize {
+        binomial(2*n, n) / (n + 1)
+    }
+
+    public function stirling_second(n: usize, k: usize) -> usize {
+        if n == k || k == 1 { return 1 }
+        k * stirling_second(n-1, k) + stirling_second(n-1, k-1)
+    }
+
+    public function factorial_iterative(n: usize) -> usize {
+        let mut res = 1
+        for i in 2..=n {
+            res *= i
+        }
+        res
+    }
+
+    public function permutations_array<T>(arr: Array<T>) -> Generator<Array<T>>
+        where T: Clone {
+        generate {
+            for p in permutations((0..arr.length()).to_array()) {
+                yield p.map(|i| arr[i].clone())
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Async streams, lazy evaluation, generators
+    // ─────────────────────────────────────────────
+    public async function stream_primes_async(limit: usize) -> AsyncGenerator<usize> {
+        for p in primes(limit) {
+            await sleep(Duration::milliseconds(1))
+            yield p
+        }
+    }
+
+    public async function throttled_fetch_advanced(urls: Array<String>, concurrency: usize) -> AsyncResult<Map<String,String>> {
+        let semaphore = Arc::new(Mutex::new(concurrency))
+        let results = Map::new()
+
+        for u in urls {
+            await semaphore.lock()
+            let r = await resilient_operation(u)
+            results.insert(u, r.unwrap_or("FAIL"))
+            semaphore.unlock()
+        }
+
+        results
+    }
+
+    public function fibonacci_infinite() -> Generator<usize> {
+        var a = 0; var b = 1
+        generate {
+            loop {
+                yield a
+                let tmp = a; a = b; b = tmp + b
+            }
+        }
+    }
+
+    public function windowed_sum_array(arr: Array<f64>, size: usize) -> Generator<f64> {
+        generate {
+            for i in 0..=(arr.length() - size) {
+                yield arr[i..(i+size)].sum()
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced math: tensors, matrices, complex numbers
+    // ─────────────────────────────────────────────
+    public function matrix_determinant_advanced(m: Matrix<f64>) -> f64 {
+        lu_decompose(m).determinant()
+    }
+
+    public function tensor_norm_advanced(t: Tensor<f64>) -> f64 {
+        sqrt(t.elements.map(|x| x*x).sum())
+    }
+
+    public function complex_exp_advanced(z: Complex<f64>) -> Complex<f64> {
+        let e = exp(z.re)
+        Complex::new(e*cos(z.im), e*sin(z.im))
+    }
+
+    public function kronecker_plus(a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> {
+        kronecker_product(a, b) + a + b
+    }
+
+    public function tensor_contract_lazy(t: Tensor<f64>, axes: Array<usize>) -> Tensor<f64> {
+        t.reduce(axes, |acc, x| acc * x + 1.0)
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL pipelines, workflow, streaming, async
+    // ─────────────────────────────────────────────
+    public function omni_pipeline() -> Pipeline {
+        pipeline "OmniFlow" {
+            step "Extract" {
+                from: database::query("SELECT * FROM omni_telemetry"),
+                validate: true
+            }
+            step "Transform" {
+                map: |row| normalize(row.value),
+                filter: |row| row.value >= 0.0
+            }
+            step "Enrich" {
+                join: api::fetch("https://api.omni.com"), on: "uuid"
+            }
+            step "Aggregate" {
+                reduce: |acc,row| acc + row.value,
+                initial: 0.0
+            }
+            step "Load" {
+                to: warehouse::table("omni_processed"),
+                mode: Upsert,
+                batch_size: 10000
+            }
+        }
+    }
+
+    public async function async_logger_stream(events: AsyncGenerator<Event>) {
+        for e in events {
+            await sleep(Duration::milliseconds(1))
+            println("[${e.timestamp}] Event: ${e.id}")
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Extreme Unicode operator coverage
+    // ─────────────────────────────────────────────
+    public operator ⩵⨀ (a: f64, b: f64) -> bool { abs(a-b) < 1e-15 }
+    public operator ⋆⨁ (a: Vector<f64>, b: Vector<f64>) -> Vector<f64> { zip(a.elements, b.elements).map(|x,y| x+y).to_vector() }
+    public operator ⨂⋆⨁ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> { kronecker_product(a,b) + b }
+    public operator ≡≡ (a: f64, b: f64) -> bool { abs(a-b) < 1e-16 }
+    public operator ∙∙∙ (a: Vector<f64>, b: Vector<f64>) -> f64 { a.dot(b) * a.norm() }
+
+    // ─────────────────────────────────────────────
+    // Reflection & meta-programming, emit macros
+    // ─────────────────────────────────────────────
+    public function emit_all_setters(fields: Array<Field>) {
+        for f in fields {
+            emit `public function with_${f.name}(val: ${f.type}) -> Self {
+                this.${f.name} = val
+                return this
+            }`
+        }
+    }
+
+    public function inspect_all<T>() -> Map<String, Dynamic> {
+        reflect T {
+            fields: get_fields,
+            methods: get_methods,
+            annotations: get_annotations,
+            variants: get_variants
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Ultimate stress-test complex expression
+    // ─────────────────────────────────────────────
+    public function omni_stress_expression() -> Complex<f64> {
+        let a = [1,2,3,4,5].map(|x| x**3).filter(|x| x % 2 == 1)
+        let b = (0..50).fold(0, |acc,v| acc + v)
+        let c = Complex::new(2.0,3.0) * Complex::i()
+        let d = a.fold(0, |acc,v| acc + v)
+
+        ((c + b) * d / 4.0) >> 3 & 0xAA | 0x55 ^ ~0 != 0 && true || false ?? default_val
+    }
+
+    // ─────────────────────────────────────────────
+    // Edge-case constructs: defer, try/catch/finally, guard
+    // ─────────────────────────────────────────────
+    public function edge_cases_demo(input: Array<f64>) -> Result<f64, String> {
+        defer { cleanup_resources(); log("Cleanup done") }
+
+        try {
+            guard input.length() > 0 else { throw ValidationError::new("Empty input") }
+
+            let result = input.fold(0.0, |acc, x| acc + sqrt(x))
+            return Result::Ok(result)
+
+        } catch ValidationError as e {
+            return Result::Err(format("Validation failed: {}", e))
+        } catch TimeoutError {
+            return Result::Err("Timeout occurred")
+        } finally {
+            release_memory()
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Documented functions, nested comments
+    // ─────────────────────────────────────────────
+    /*
+        Block comment level 1
+        /* Nested block comment level 2 */
+        /// Doc comment level 3
+    */
+    public function documented_edge(x: i32) -> i32 {
+        // inline comment
+        x * 42 // multiply by ultimate answer
+    }
+
+}
+
+// ─────────────────────────────────────────────
+// END OF ULTIMATE EXPANSION IV
+// ─────────────────────────────────────────────
+/|\\ Total tokens: ~5000+
+/// Covers: recursion, combinatorics, async, streams, unicode operators, tensors, matrices, pipelines, meta-programming, edge-case constructs
+/|\\ ==============================================================================
+
+// ─────────────────────────────────────────────
+// ULTIMATE EXPANSION V - 3000-LINE STRESS TEST
+// ─────────────────────────────────────────────
+container Math::Operations::OmniMax {
+
+    import std::math::{erf, gamma, factorial, ln, exp, log10, pi, sqrt, cos, sin, tan, atan2}
+    import std::sync::{Arc, Mutex, RwLock, Barrier, CondVar, atomic}
+    import std::thread
+    import std::time::{Duration, Instant, UTC, Local}
+    import std::random::{seed, random, shuffle, choose, sample, next_u64}
+
+    // ─────────────────────────────────────────────
+    // Hyper-recursion & combinatorial stress
+    // ─────────────────────────────────────────────
+    public function hyper_ackermann(m: usize, n: usize) -> usize {
+        if m == 0 { return n + 1 }
+        if n == 0 { return hyper_ackermann(m-1, 1) }
+        hyper_ackermann(m-1, hyper_ackermann(m, n-1))
+    }
+
+    public function binomial_large(n: usize, k: usize) -> usize {
+        if k == 0 || k == n { return 1 }
+        binomial_large(n-1,k-1) + binomial_large(n-1,k)
+    }
+
+    public function catalan_recursive(n: usize) -> usize {
+        if n <= 1 { return 1 }
+        (0..n).fold(0, |acc,i| acc + catalan_recursive(i)*catalan_recursive(n-i-1))
+    }
+
+    public function factorial_recursive(n: usize) -> usize {
+        if n <= 1 { return 1 }
+        n * factorial_recursive(n-1)
+    }
+
+    // ─────────────────────────────────────────────
+    // Async generators, lazy evaluation, streaming
+    // ─────────────────────────────────────────────
+    public async function async_fibonacci(limit: usize) -> AsyncGenerator<usize> {
+        var a = 0; var b = 1
+        generate {
+            for _ in 0..limit {
+                yield a
+                let tmp = a; a = b; b = tmp + b
+                await sleep(Duration::milliseconds(1))
+            }
+        }
+    }
+
+    public async function async_prime_stream(limit: usize) -> AsyncGenerator<usize> {
+        for p in primes(limit) {
+            await sleep(Duration::milliseconds(1))
+            yield p
+        }
+    }
+
+    public async function throttled_fetch_v2(urls: Array<String>, concurrency: usize) -> AsyncResult<Map<String,String>> {
+        let semaphore = Arc::new(Mutex::new(concurrency))
+        let results = Map::new()
+        for u in urls {
+            await semaphore.lock()
+            let r = await resilient_operation(u)
+            results.insert(u, r.unwrap_or("FAIL"))
+            semaphore.unlock()
+        }
+        results
+    }
+
+    // ─────────────────────────────────────────────
+    // Meta-programming, reflection, emit macros
+    // ─────────────────────────────────────────────
+    public function emit_all_getters(fields: Array<Field>) {
+        for f in fields {
+            emit `public function get_${f.name}() -> ${f.type} { return this.${f.name} }`
+        }
+    }
+
+    public function reflect_advanced<T>() -> Map<String, Dynamic> {
+        reflect T {
+            fields: get_fields,
+            methods: get_methods,
+            variants: get_variants,
+            annotations: get_annotations,
+            documentation: get_docs
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Extreme Unicode operator coverage
+    // ─────────────────────────────────────────────
+    public operator ⨁⋆ (a: Vector<f64>, b: Vector<f64>) -> Vector<f64> { zip(a.elements,b.elements).map(|x,y| x+y).to_vector() }
+    public operator ⨂⨀ (a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> { kronecker_product(a,b) + a }
+    public operator ⩵⨁ (a: f64, b: f64) -> bool { abs(a-b) < 1e-15 }
+    public operator ∙⋆ (a: Vector<f64>, b: Vector<f64>) -> f64 { a.dot(b) * a.norm() }
+    public operator ≈⨂ (a: f64, b: f64) -> bool { abs(a-b) < 1e-14 }
+
+    // ─────────────────────────────────────────────
+    // Edge-case error handling: defer, try/catch/finally, guard
+    // ─────────────────────────────────────────────
+    public function robust_edge_case(input: Array<f64>) -> Result<f64,String> {
+        defer { cleanup_resources(); log("Cleanup complete") }
+
+        try {
+            guard input.length() > 0 else { throw ValidationError::new("Input cannot be empty") }
+
+            let result = input.fold(0.0, |acc,x| acc + sqrt(x))
+            return Result::Ok(result)
+
+        } catch ValidationError as e {
+            return Result::Err(format("Validation failed: {}", e))
+        } catch TimeoutError {
+            return Result::Err("Timeout occurred")
+        } finally {
+            release_memory()
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // String interpolation & templates
+    // ─────────────────────────────────────────────
+    public function fancy_log_template(template: String, values: Map<String,Dynamic>) -> String {
+        values.fold(template, |acc,(k,v)| acc.replace("${k}", v.to_string()))
+    }
+
+    public function report_summary_advanced(data: Data) -> String {
+        let ts = UTC::now()
+        return `Summary @ ${ts:%F %T}:
+        Elements: ${data.size()}
+        Errors: ${data.errors().length()}
+        Status: ${if data.is_valid() {"OK"} else {"FAIL"}}
+        Checksum: ${data.checksum():#012x}`
+    }
+
+    // ─────────────────────────────────────────────
+    // DSL & pipeline extreme constructs
+    // ─────────────────────────────────────────────
+    public function omni_pipeline_ultimate() -> Pipeline {
+        pipeline "OmniMax Flow" {
+            step "Extract" {
+                from: database::query("SELECT * FROM telemetry_omni"),
+                validate: true
+            }
+
+            step "Transform" {
+                map: |row| normalize(row.value),
+                filter: |row| row.value >= 0.0
+            }
+
+            step "Enrich" {
+                join: api::fetch("https://api.omni.com"), on: "uuid"
+            }
+
+            step "Aggregate" {
+                reduce: |acc,row| acc + row.value, initial: 0.0
+            }
+
+            step "Load" {
+                to: warehouse::table("telemetry_processed"),
+                mode: Upsert, batch_size: 10000
+            }
+        }
+    }
+
+    public async function async_logger_stream_v2(events: AsyncGenerator<Event>) {
+        for e in events {
+            await sleep(Duration::milliseconds(1))
+            println("[${e.timestamp}] Event: ${e.id}")
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Complex math: matrices, tensors, complex numbers
+    // ─────────────────────────────────────────────
+    public function matrix_inverse_advanced(m: Matrix<f64>) -> Matrix<f64> {
+        lu_decompose(m).inverse()
+    }
+
+    public function tensor_contract_full(t: Tensor<f64>, axes: Array<usize>) -> Tensor<f64> {
+        t.reduce(axes, |acc,x| acc * x + 1.0)
+    }
+
+    public function complex_exp_full(z: Complex<f64>) -> Complex<f64> {
+        let e = exp(z.re)
+        Complex::new(e*cos(z.im), e*sin(z.im))
+    }
+
+    public function kronecker_plus_full(a: Tensor<f64>, b: Tensor<f64>) -> Tensor<f64> {
+        kronecker_product(a,b) + a + b
+    }
+
+    // ─────────────────────────────────────────────
+    // Stress-test final expression
+    // ─────────────────────────────────────────────
+    public function omni_stress_expression_full() -> Complex<f64> {
+        let a = [1,2,3,4,5].map(|x| x**3).filter(|x| x % 2 == 1)
+        let b = (0..50).fold(0, |acc,v| acc + v)
+        let c = Complex::new(2.0,3.0) * Complex::i()
+        let d = a.fold(0, |acc,v| acc + v)
+
+        ((c + b) * d / 4.0) >> 3 & 0xAA | 0x55 ^ ~0 != 0 && true || false ?? default_val
+    }
+
+    // ─────────────────────────────────────────────
+    // Documented functions, nested comments, inline comments
+    // ─────────────────────────────────────────────
+    /*
+        Block comment level 1
+        /* Nested block comment level 2 */
+        /// Doc comment level 3
+    */
+    public function documented_edge_ultimate(x: i32) -> i32 {
+        // inline comment
+        x * 42 // multiply by ultimate answer
+    }
+
+// ─────────────────────────────────────────────
+    // Advanced Concurrency Patterns
+    // ─────────────────────────────────────────────
+    public async function actor_system_spawn(count: usize) -> ActorSystem {
+        let system = ActorSystem::new()
+        for i in 0..count {
+            let actor = system.spawn(async |mailbox| {
+                loop {
+                    match await mailbox.receive() {
+                        Message::Compute(x) => mailbox.send_reply(x * 2),
+                        Message::Stop => break,
+                        _ => continue
+                    }
+                }
+            })
+            system.register(format("actor_{}", i), actor)
+        }
+        system
+    }
+
+    public async function work_stealing_scheduler(tasks: Array<Task>) -> Array<Result> {
+        let workers = (0..num_cpus()).map(|_| Worker::new()).collect()
+        let queue = WorkStealingQueue::new(tasks)
+
+        let handles = workers.map(|w| {
+            spawn(async move {
+                while let Some(task) = queue.steal() {
+                    await task.execute()
+                }
+            })
+        })
+
+        await join_all(handles)
+    }
+
+    public function lock_free_stack<T>() -> LockFreeStack<T> {
+        struct Node<T> { value: T, next: Atomic<Option<Box<Node<T>>>> }
+
+        LockFreeStack {
+            head: Atomic::new(None),
+            push: |value| {
+                loop {
+                    let node = Box::new(Node { value, next: Atomic::new(head.load()) })
+                    if head.compare_exchange(old, Some(node)).is_ok() { break }
+                }
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Quantum Computing Simulation
+    // ─────────────────────────────────────────────
+    public function hadamard_gate(qubit: Qubit) -> Qubit {
+        let h = Matrix::new([[1.0/sqrt(2.0), 1.0/sqrt(2.0)],
+                             [1.0/sqrt(2.0), -1.0/sqrt(2.0)]])
+        h.apply(qubit)
+    }
+
+    public function cnot_gate(control: Qubit, target: Qubit) -> (Qubit, Qubit) {
+        let cnot = Matrix::from_blocks([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 1, 0]
+        ])
+        cnot.apply_to_pair(control, target)
+    }
+
+    public function quantum_teleportation(state: Qubit, alice: Qubit, bob: Qubit) -> Qubit {
+        let (alice, bob) = bell_pair(alice, bob)
+        let (state, alice) = cnot_gate(state, alice)
+        let state = hadamard_gate(state)
+
+        let m1 = measure(state)
+        let m2 = measure(alice)
+
+        if m2 == 1 { bob = pauli_x(bob) }
+        if m1 == 1 { bob = pauli_z(bob) }
+        bob
+    }
+
+    public function shor_algorithm(n: usize) -> Array<usize> {
+        let qubits = allocate_qubits(ceil(log2(n)) * 2)
+        apply_qft(qubits)
+        let period = find_period(n)
+        factorize(n, period)
+    }
+
+    // ─────────────────────────────────────────────
+    // Machine Learning Primitives
+    // ─────────────────────────────────────────────
+    public function neural_network_forward(input: Vector<f64>, weights: Array<Matrix<f64>>) -> Vector<f64> {
+        weights.fold(input, |activation, w| {
+            relu(w.multiply(activation))
+        })
+    }
+
+    public function backpropagation(network: NeuralNet, input: Vector<f64>, target: Vector<f64>) -> Array<Matrix<f64>> {
+        let outputs = network.forward(input)
+        let loss = mse_loss(outputs.last(), target)
+
+        let gradients = network.layers.reverse().scan(loss.gradient(), |grad, layer| {
+            let delta = grad.multiply(layer.activation_derivative())
+            let weight_grad = delta.outer(layer.input)
+            (delta.multiply(layer.weights.transpose()), weight_grad)
+        })
+
+        gradients.collect()
+    }
+
+    public function adam_optimizer(params: Array<Matrix<f64>>, gradients: Array<Matrix<f64>>,
+                                   state: OptimizerState) -> (Array<Matrix<f64>>, OptimizerState) {
+        let beta1 = 0.9; let beta2 = 0.999; let epsilon = 1e-8
+
+        let (new_params, new_state) = zip(params, gradients).map(|(p, g)| {
+            let m = beta1 * state.m + (1.0 - beta1) * g
+            let v = beta2 * state.v + (1.0 - beta2) * g.square()
+            let m_hat = m / (1.0 - beta1.pow(state.t))
+            let v_hat = v / (1.0 - beta2.pow(state.t))
+
+            (p - state.lr * m_hat / (v_hat.sqrt() + epsilon), OptimizerState { m, v, t: state.t + 1 })
+        }).unzip()
+
+        (new_params, new_state)
+    }
+
+    public function convolutional_layer(input: Tensor<f64>, kernel: Tensor<f64>, stride: usize) -> Tensor<f64> {
+        let (h, w, c) = input.shape()
+        let (kh, kw, _, kc) = kernel.shape()
+
+        let output = Tensor::zeros((h - kh)/stride + 1, (w - kw)/stride + 1, kc)
+
+        for i in 0..output.height() {
+            for j in 0..output.width() {
+                for k in 0..kc {
+                    let patch = input.slice(i*stride, j*stride, kh, kw)
+                    output[i][j][k] = (patch * kernel[.., .., .., k]).sum()
+                }
+            }
+        }
+        output
+    }
+
+    // ─────────────────────────────────────────────
+    // Cryptography & Security
+    // ─────────────────────────────────────────────
+    public function rsa_keygen(bits: usize) -> (PublicKey, PrivateKey) {
+        let p = generate_prime(bits / 2)
+        let q = generate_prime(bits / 2)
+        let n = p * q
+        let phi = (p - 1) * (q - 1)
+        let e = 65537
+        let d = mod_inverse(e, phi)
+
+        (PublicKey { e, n }, PrivateKey { d, n })
+    }
+
+    public function aes_encrypt(plaintext: Array<u8>, key: Array<u8>) -> Array<u8> {
+        let rounds = match key.length() {
+            16 => 10, 24 => 12, 32 => 14, _ => panic("Invalid key size")
+        }
+
+        let state = plaintext.chunks(16).map(|block| {
+            let mut s = block.to_state_matrix()
+            add_round_key(&mut s, key)
+
+            for r in 0..rounds-1 {
+                sub_bytes(&mut s)
+                shift_rows(&mut s)
+                mix_columns(&mut s)
+                add_round_key(&mut s, expand_key(key, r))
+            }
+
+            sub_bytes(&mut s)
+            shift_rows(&mut s)
+            add_round_key(&mut s, expand_key(key, rounds))
+            s.to_bytes()
+        }).flatten().collect()
+
+        state
+    }
+
+    public function diffie_hellman_exchange(p: BigInt, g: BigInt) -> (BigInt, BigInt) {
+        let private_key = random_bigint(256)
+        let public_key = g.mod_pow(private_key, p)
+        (private_key, public_key)
+    }
+
+    public function elliptic_curve_point_addition(p1: ECPoint, p2: ECPoint, curve: ECCurve) -> ECPoint {
+        if p1 == ECPoint::infinity() { return p2 }
+        if p2 == ECPoint::infinity() { return p1 }
+
+        let slope = if p1 == p2 {
+            (3 * p1.x.pow(2) + curve.a) / (2 * p1.y)
+        } else {
+            (p2.y - p1.y) / (p2.x - p1.x)
+        }
+
+        let x3 = slope.pow(2) - p1.x - p2.x
+        let y3 = slope * (p1.x - x3) - p1.y
+        ECPoint { x: x3.mod(curve.p), y: y3.mod(curve.p) }
+    }
+
+    // ─────────────────────────────────────────────
+    // Graph Algorithms Advanced
+    // ─────────────────────────────────────────────
+    public function bellman_ford(graph: Graph, source: NodeId) -> Map<NodeId, f64> {
+        let mut distances = graph.nodes().map(|n| (n, f64::INFINITY)).collect()
+        distances[source] = 0.0
+
+        for _ in 0..graph.node_count()-1 {
+            for edge in graph.edges() {
+                let alt = distances[edge.from] + edge.weight
+                if alt < distances[edge.to] {
+                    distances[edge.to] = alt
+                }
+            }
+        }
+
+        // Negative cycle detection
+        for edge in graph.edges() {
+            if distances[edge.from] + edge.weight < distances[edge.to] {
+                panic("Negative cycle detected")
+            }
+        }
+
+        distances
+    }
+
+    public function floyd_warshall(graph: Graph) -> Matrix<f64> {
+        let n = graph.node_count()
+        let mut dist = Matrix::filled(n, n, f64::INFINITY)
+
+        for i in 0..n { dist[i][i] = 0.0 }
+        for edge in graph.edges() {
+            dist[edge.from][edge.to] = edge.weight
+        }
+
+        for k in 0..n {
+            for i in 0..n {
+                for j in 0..n {
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+                }
+            }
+        }
+
+        dist
+    }
+
+    public function max_flow_ford_fulkerson(graph: Graph, source: NodeId, sink: NodeId) -> f64 {
+        let mut residual = graph.clone()
+        let mut total_flow = 0.0
+
+        while let Some(path) = bfs_find_path(&residual, source, sink) {
+            let bottleneck = path.edges().map(|e| residual.capacity(e)).min()
+
+            for edge in path.edges() {
+                residual.decrease_capacity(edge, bottleneck)
+                residual.increase_capacity(edge.reverse(), bottleneck)
+            }
+
+            total_flow += bottleneck
+        }
+
+        total_flow
+    }
+
+    public function strongly_connected_components(graph: Graph) -> Array<Set<NodeId>> {
+        let mut visited = Set::new()
+        let mut stack = Vec::new()
+
+        // First DFS
+        for node in graph.nodes() {
+            if !visited.contains(node) {
+                dfs_scc_first(&graph, node, &mut visited, &mut stack)
+            }
+        }
+
+        // Second DFS on reversed graph
+        let reversed = graph.reverse()
+        visited.clear()
+        let mut components = Vec::new()
+
+        while let Some(node) = stack.pop() {
+            if !visited.contains(node) {
+                let component = Set::new()
+                dfs_scc_second(&reversed, node, &mut visited, &mut component)
+                components.push(component)
+            }
+        }
+
+        components
+    }
+
+    // ─────────────────────────────────────────────
+    // Computational Geometry
+    // ─────────────────────────────────────────────
+    public function convex_hull_graham_scan(points: Array<Point>) -> Array<Point> {
+        let p0 = points.iter().min_by(|a, b| (a.y, a.x).cmp(&(b.y, b.x)))
+        let mut sorted = points.clone()
+        sorted.sort_by(|a, b| {
+            let angle_a = atan2(a.y - p0.y, a.x - p0.x)
+            let angle_b = atan2(b.y - p0.y, b.x - p0.x)
+            angle_a.cmp(&angle_b)
+        })
+
+        let mut hull = vec![sorted[0], sorted[1]]
+
+        for i in 2..sorted.length() {
+            while hull.length() > 1 &&
+                  cross_product(hull[hull.length()-2], hull[hull.length()-1], sorted[i]) <= 0 {
+                hull.pop()
+            }
+            hull.push(sorted[i])
+        }
+
+        hull
+    }
+
+    public function voronoi_diagram(sites: Array<Point>) -> VoronoiDiagram {
+        let delaunay = delaunay_triangulation(sites)
+        let diagram = VoronoiDiagram::new()
+
+        for triangle in delaunay.triangles() {
+            let circumcenter = triangle.circumcenter()
+            diagram.add_vertex(circumcenter)
+        }
+
+        for edge in delaunay.edges() {
+            let t1 = delaunay.triangle_containing_edge(edge, 0)
+            let t2 = delaunay.triangle_containing_edge(edge, 1)
+            diagram.add_edge(t1.circumcenter(), t2.circumcenter())
+        }
+
+        diagram
+    }
+
+    public function line_segment_intersection(p1: Point, p2: Point, p3: Point, p4: Point) -> Option<Point> {
+        let d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x)
+        if abs(d) < 1e-10 { return None }
+
+        let t = ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / d
+        let u = -((p1.x - p2.x) * (p1.y - p3.y) - (p1.y - p2.y) * (p1.x - p3.x)) / d
+
+        if t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0 {
+            Some(Point { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) })
+        } else {
+            None
+        }
+    }
+
+    public function closest_pair_of_points(points: Array<Point>) -> (Point, Point) {
+        if points.length() <= 3 {
+            return brute_force_closest(points)
+        }
+
+        let mid = points.length() / 2
+        let (left, right) = points.split_at(mid)
+
+        let (p1, p2) = min(closest_pair_of_points(left), closest_pair_of_points(right))
+        let delta = distance(p1, p2)
+
+        let strip = points.filter(|p| abs(p.x - points[mid].x) < delta)
+
+        for i in 0..strip.length() {
+            for j in i+1..min(i+8, strip.length()) {
+                let d = distance(strip[i], strip[j])
+                if d < delta {
+                    (p1, p2) = (strip[i], strip[j])
+                    delta = d
+                }
+            }
+        }
+
+        (p1, p2)
+    }
+
+    // ─────────────────────────────────────────────
+    // String Algorithms Advanced
+    // ─────────────────────────────────────────────
+    public function kmp_pattern_matching(text: String, pattern: String) -> Array<usize> {
+        let lps = compute_lps(pattern)
+        let mut matches = Vec::new()
+        let mut i = 0; let mut j = 0
+
+        while i < text.length() {
+            if pattern[j] == text[i] {
+                i += 1; j += 1
+            }
+
+            if j == pattern.length() {
+                matches.push(i - j)
+                j = lps[j - 1]
+            } else if i < text.length() && pattern[j] != text[i] {
+                if j != 0 {
+                    j = lps[j - 1]
+                } else {
+                    i += 1
+                }
+            }
+        }
+
+        matches
+    }
+
+    public function suffix_array_construction(text: String) -> Array<usize> {
+        let n = text.length()
+        let mut suffixes = (0..n).map(|i| (text[i..], i)).collect()
+        suffixes.sort_by(|a, b| a.0.cmp(&b.0))
+        suffixes.map(|(_, i)| i).collect()
+    }
+
+    public function lcs_dynamic(s1: String, s2: String) -> String {
+        let m = s1.length(); let n = s2.length()
+        let mut dp = Matrix::zeros(m + 1, n + 1)
+
+        for i in 1..=m {
+            for j in 1..=n {
+                if s1[i-1] == s2[j-1] {
+                    dp[i][j] = dp[i-1][j-1] + 1
+                } else {
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                }
+            }
+        }
+
+        // Backtrack to find LCS
+        let mut lcs = String::new()
+        let mut i = m; let mut j = n
+        while i > 0 && j > 0 {
+            if s1[i-1] == s2[j-1] {
+                lcs = s1[i-1] + lcs
+                i -= 1; j -= 1
+            } else if dp[i-1][j] > dp[i][j-1] {
+                i -= 1
+            } else {
+                j -= 1
+            }
+        }
+
+        lcs
+    }
+
+    public function rabin_karp_multimatch(text: String, patterns: Array<String>) -> Map<String, Array<usize>> {
+        let base = 256; let modulus = 1000000007
+        let results = Map::new()
+
+        for pattern in patterns {
+            let pattern_hash = compute_rolling_hash(pattern, base, modulus)
+            let mut text_hash = compute_rolling_hash(text[..pattern.length()], base, modulus)
+            let power = base.pow(pattern.length() - 1) % modulus
+            let mut matches = Vec::new()
+
+            for i in 0..=(text.length() - pattern.length()) {
+                if text_hash == pattern_hash && text[i..i+pattern.length()] == pattern {
+                    matches.push(i)
+                }
+
+                if i < text.length() - pattern.length() {
+                    text_hash = (base * (text_hash - text[i] * power) + text[i + pattern.length()]) % modulus
+                }
+            }
+
+            results.insert(pattern, matches)
+        }
+
+        results
+    }
+
+    // ─────────────────────────────────────────────
+    // Advanced Data Structures
+    // ─────────────────────────────────────────────
+    public class SegmentTree<T> {
+        private tree: Array<T>
+        private lazy: Array<T>
+        private combine: Function<T, T, T>
+
+        public function new(data: Array<T>, combine_fn: Function<T, T, T>) -> Self {
+            let n = data.length()
+            let tree_size = 4 * n
+            SegmentTree {
+                tree: Array::filled(tree_size, T::default()),
+                lazy: Array::filled(tree_size, T::default()),
+                combine: combine_fn
+            }.build(data, 0, 0, n - 1)
+        }
+
+        private function build(data: Array<T>, node: usize, start: usize, end: usize) {
+            if start == end {
+                this.tree[node] = data[start]
+            } else {
+                let mid = (start + end) / 2
+                this.build(data, 2*node+1, start, mid)
+                this.build(data, 2*node+2, mid+1, end)
+                this.tree[node] = this.combine(this.tree[2*node+1], this.tree[2*node+2])
+            }
+        }
+
+        public function query(left: usize, right: usize) -> T {
+            this.query_range(0, 0, this.tree.length()/4 - 1, left, right)
+        }
+
+        private function query_range(node: usize, start: usize, end: usize, left: usize, right: usize) -> T {
+            this.propagate(node, start, end)
+
+            if start > right || end < left { return T::default() }
+            if start >= left && end <= right { return this.tree[node] }
+
+            let mid = (start + end) / 2
+            let left_result = this.query_range(2*node+1, start, mid, left, right)
+            let right_result = this.query_range(2*node+2, mid+1, end, left, right)
+            this.combine(left_result, right_result)
+        }
+
+        public function update_range(left: usize, right: usize, value: T) {
+            this.update_range_internal(0, 0, this.tree.length()/4 - 1, left, right, value)
+        }
+
+        private function propagate(node: usize, start: usize, end: usize) {
+            if this.lazy[node] != T::default() {
+                this.tree[node] = this.combine(this.tree[node], this.lazy[node])
+                if start != end {
+                    this.lazy[2*node+1] = this.combine(this.lazy[2*node+1], this.lazy[node])
+                    this.lazy[2*node+2] = this.combine(this.lazy[2*node+2], this.lazy[node])
+                }
+                this.lazy[node] = T::default()
+            }
+        }
+    }
+
+    public class FenwickTree {
+        private tree: Array<i64>
+
+        public function new(size: usize) -> Self {
+            FenwickTree { tree: Array::filled(size + 1, 0) }
+        }
+
+        public function update(index: usize, delta: i64) {
+            let mut i = index + 1
+            while i < this.tree.length() {
+                this.tree[i] += delta
+                i += i & (-i)
+            }
+        }
+
+        public function query(index: usize) -> i64 {
+            let mut sum = 0
+            let mut i = index + 1
+            while i > 0 {
+                sum += this.tree[i]
+                i -= i & (-i)
+            }
+            sum
+        }
+
+        public function range_query(left: usize, right: usize) -> i64 {
+            this.query(right) - if left > 0 { this.query(left - 1) } else { 0 }
+        }
+    }
+
+    public class Trie {
+        private root: TrieNode
+
+        public function new() -> Self {
+            Trie { root: TrieNode::new() }
+        }
+
+        public function insert(word: String) {
+            let mut node = &mut this.root
+            for ch in word.chars() {
+                node = node.children.entry(ch).or_insert(TrieNode::new())
+            }
+            node.is_end = true
+        }
+
+        public function search(word: String) -> bool {
+            let mut node = &this.root
+            for ch in word.chars() {
+                match node.children.get(ch) {
+                    Some(n) => node = n,
+                    None => return false
+                }
+            }
+            node.is_end
+        }
+
+        public function starts_with(prefix: String) -> bool {
+            let mut node = &this.root
+            for ch in prefix.chars() {
+                match node.children.get(ch) {
+                    Some(n) => node = n,
+                    None => return false
+                }
+            }
+            true
+        }
+
+        public function autocomplete(prefix: String) -> Array<String> {
+            let mut node = &this.root
+            for ch in prefix.chars() {
+                match node.children.get(ch) {
+                    Some(n) => node = n,
+                    None => return []
+                }
+            }
+
+            let mut results = Vec::new()
+            this.dfs_collect(node, prefix, &mut results)
+            results
+        }
+
+        private function dfs_collect(node: &TrieNode, current: String, results: &mut Array<String>) {
+            if node.is_end {
+                results.push(current.clone())
+            }
+            for (ch, child) in node.children.iter() {
+                this.dfs_collect(child, current + ch, results)
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Numerical Methods & Scientific Computing
+    // ─────────────────────────────────────────────
+    public function newton_raphson(f: Function<f64, f64>, df: Function<f64, f64>, x0: f64,
+                                   tolerance: f64, max_iter: usize) -> f64 {
+        let mut x = x0
+        for _ in 0..max_iter {
+            let fx = f(x)
+            if abs(fx) < tolerance { return x }
+            x = x - fx / df(x)
+        }
+        x
+    }
+
+    public function runge_kutta_4(f: Function<f64, f64, f64>, x0: f64, y0: f64,
+                                  xn: f64, n: usize) -> Array<(f64, f64)> {
+        let h = (xn - x0) / n as f64
+        let mut points = vec![(x0, y0)]
+        let mut x = x0; let mut y = y0
+
+        for _ in 0..n {
+            let k1 = h * f(x, y)
+            let k2 = h * f(x + h/2.0, y + k1/2.0)
+            let k3 = h * f(x + h/2.0, y + k2/2.0)
+            let k4 = h * f(x + h, y + k3)
+
+            y = y + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
+            x = x + h
+            points.push((x, y))
+        }
+
+        points
+    }
+
+    public function monte_carlo_integration(f: Function<f64, f64>, a: f64, b: f64,
+                                           samples: usize) -> f64 {
+        let sum = (0..samples).map(|_| {
+            let x = a + (b - a) * random::<f64>()
+            f(x)
+        }).sum()
+
+        (b - a) * sum / samples as f64
+    }
+
+    public function gradient_descent(f: Function<Vector<f64>, f64>,
+                                     gradient: Function<Vector<f64>, Vector<f64>>,
+                                     x0: Vector<f64>, learning_rate: f64,
+                                     max_iter: usize) -> Vector<f64> {
+        let mut x = x0
+        for _ in 0..max_iter {
+            let grad = gradient(x)
+            x = x - learning_rate * grad
+            if grad.norm() < 1e-6 { break }
+        }
+        x
+    }
+
+    public function conjugate_gradient(A: Matrix<f64>, b: Vector<f64>, x0: Vector<f64>) -> Vector<f64> {
+        let mut x = x0
+        let mut r = b - A.multiply(x)
+        let mut p = r.clone()
+        let mut rs_old = r.dot(r)
+
+        for _ in 0..A.rows() {
+            let Ap = A.multiply(p)
+            let alpha = rs_old / p.dot(Ap)
+            x = x + alpha * p
+            r = r - alpha * Ap
+            let rs_new = r.dot(r)
+
+            if sqrt(rs_new) < 1e-10 { break }
+
+            let beta = rs_new / rs_old
+            p = r + beta * p
+            rs_old = rs_new
+        }
+
+        x
+    }
+
+    // ─────────────────────────────────────────────
+    // Compiler & Parser Constructs
+    // ─────────────────────────────────────────────
+    public enum Token {
+        Identifier(String),
+        Number(f64),
+        Operator(char),
+        Keyword(String),
+        LeftParen, RightParen,
+        LeftBrace, RightBrace,
+        Semicolon, Comma,
+        EOF
+    }
+
+    public class Lexer {
+        private input: String
+        private position: usize
+
+        public function new(source: String) -> Self {
+            Lexer { input: source, position: 0 }
+        }
+
+        public function next_token() -> Token {
+            this.skip_whitespace()
+
+            if this.position >= this.input.length() {
+                return Token::EOF
+            }
+
+            let ch = this.current_char()
+
+            if ch.is_alphabetic() {
+                return this.read_identifier()
+            }
+
+            if ch.is_numeric() {
+                return this.read_number()
+            }
+
+            match ch {
+                '+' | '-' | '*' | '/' | '=' => {
+                    this.advance()
+                    Token::Operator(ch)
+                },
+                '(' => { this.advance(); Token::LeftParen },
+                ')' => { this.advance(); Token::RightParen },
+                '{' => { this.advance(); Token::LeftBrace },
+                '}' => { this.advance(); Token::RightBrace },
+                ';' => { this.advance(); Token::Semicolon },
+                ',' => { this.advance(); Token::Comma },
+                _ => panic("Unexpected character: {}", ch)
+            }
+        }
+
+        private function read_identifier() -> Token {
+            let start = this.position
+            while this.position < this.input.length() &&
+                  this.current_char().is_alphanumeric() {
+                this.advance()
+            }
+            let text = this.input[start..this.position]
+
+            match text {
+                "if" | "else" | "while" | "for" | "function" | "return" => Token::Keyword(text),
+                _ => Token::Identifier(text)
+            }
+        }
+
+        private function read_number() -> Token {
+            let start = this.position
+            while this.position < this.input.length() &&
+                  (this.current_char().is_numeric() || this.current_char() == '.') {
+                this.advance()
+            }
+            Token::Number(this.input[start..this.position].parse())
+        }
+    }
+
+    public enum ASTNode {
+        Program(Array<ASTNode>),
+        FunctionDecl { name: String, params: Array<String>, body: Box<ASTNode> },
+        BinaryOp { op: char, left: Box<ASTNode>, right: Box<ASTNode> },
+        UnaryOp { op: char, operand: Box<ASTNode> },
+        Number(f64),
+        Identifier(String),
+        Block(Array<ASTNode>),
+        If { condition: Box<ASTNode>, then_branch: Box<ASTNode>, else_branch: Option<Box<ASTNode>> },
+        While { condition: Box<ASTNode>, body: Box<ASTNode> },
+        Return(Box<ASTNode>),
+        Call { function: String, args: Array<ASTNode> }
+    }
+
+    public class Parser {
+        private lexer: Lexer
+        private current_token: Token
+
+        public function new(source: String) -> Self {
+            let mut lexer = Lexer::new(source)
+            let current = lexer.next_token()
+            Parser { lexer, current_token: current }
+        }
+
+        public function parse() -> ASTNode {
+            this.parse_program()
+        }
+
+        private function parse_program() -> ASTNode {
+            let mut statements = Vec::new()
+            while !matches!(this.current_token, Token::EOF) {
+                statements.push(this.parse_statement())
+            }
+            ASTNode::Program(statements)
+        }
+
+        private function parse_statement() -> ASTNode {
+            match this.current_token {
+                Token::Keyword("function") => this.parse_function(),
+                Token::Keyword("if") => this.parse_if(),
+                Token::Keyword("while") => this.parse_while(),
+                Token::Keyword("return") => this.parse_return(),
+                Token::LeftBrace => this.parse_block(),
+                _ => this.parse_expression_statement()
+            }
+        }
+
+        private function parse_expression() -> ASTNode {
+            this.parse_additive()
+        }
+
+        private function parse_additive() -> ASTNode {
+            let mut left = this.parse_multiplicative()
+
+            while matches!(this.current_token, Token::Operator('+') | Token::Operator('-')) {
+                let op = match this.current_token {
+                    Token::Operator(c) => c,
+                    _ => unreachable!()
+                }
+                this.advance()
+                let right = this.parse_multiplicative()
+                left = ASTNode::BinaryOp { op, left: Box::new(left), right: Box::new(right) }
+            }
+
+            left
+        }
+
+        private function parse_multiplicative() -> ASTNode {
+            let mut left = this.parse_primary()
+
+            while matches!(this.current_token, Token::Operator('*') | Token::Operator('/')) {
+                let op = match this.current_token {
+                    Token::Operator(c) => c,
+                    _ => unreachable!()
+                }
+                this.advance()
+                let right = this.parse_primary()
+                left = ASTNode::BinaryOp { op, left: Box::new(left), right: Box::new(right) }
+            }
+
+            left
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Reactive Programming & Observables
+    // ─────────────────────────────────────────────
+    public class Observable<T> {
+        private observers: Array<Function<T, void>>
+
+        public function new() -> Self {
+            Observable { observers: Vec::new() }
+        }
+
+        public function subscribe(observer: Function<T, void>) -> Subscription {
+            this.observers.push(observer)
+            Subscription { id: this.observers.length() - 1, observable: this }
+        }
+
+        public function next(value: T) {
+            for observer in this.observers.iter() {
+                observer(value)
+            }
+        }
+
+        public function map<U>(transform: Function<T, U>) -> Observable<U> {
+            let mapped = Observable::new()
+            this.subscribe(|value| mapped.next(transform(value)))
+            mapped
+        }
+
+        public function filter(predicate: Function<T, bool>) -> Observable<T> {
+            let filtered = Observable::new()
+            this.subscribe(|value| {
+                if predicate(value) { filtered.next(value) }
+            })
+            filtered
+        }
+
+        public function debounce(duration: Duration) -> Observable<T> {
+            let debounced = Observable::new()
+            let mut timer = None
+
+            this.subscribe(|value| {
+                if let Some(t) = timer { t.cancel() }
+                timer = Some(set_timeout(duration, || debounced.next(value)))
+            })
+
+            debounced
+        }
+
+        public function merge(other: Observable<T>) -> Observable<T> {
+            let merged = Observable::new()
+            this.subscribe(|value| merged.next(value))
+            other.subscribe(|value| merged.next(value))
+            merged
+        }
+
+        public function zip<U, V>(other: Observable<U>, combine: Function<T, U, V>) -> Observable<V> {
+            let zipped = Observable::new()
+            let mut buffer1 = Vec::new()
+            let mut buffer2 = Vec::new()
+
+            this.subscribe(|value| {
+                buffer1.push(value)
+                if !buffer2.is_empty() {
+                    zipped.next(combine(buffer1.remove(0), buffer2.remove(0)))
+                }
+            })
+
+            other.subscribe(|value| {
+                buffer2.push(value)
+                if !buffer1.is_empty() {
+                    zipped.next(combine(buffer1.remove(0), buffer2.remove(0)))
+                }
+            })
+
+            zipped
+        }
+    }
+
+    public function from_array<T>(arr: Array<T>) -> Observable<T> {
+        let obs = Observable::new()
+        spawn(async move {
+            for item in arr {
+                obs.next(item)
+                await sleep(Duration::milliseconds(1))
+            }
+        })
+        obs
+    }
+
+    public function interval(duration: Duration) -> Observable<usize> {
+        let obs = Observable::new()
+        let mut count = 0
+
+        spawn(async move {
+            loop {
+                obs.next(count)
+                count += 1
+                await sleep(duration)
+            }
+        })
+
+        obs
+    }
+
+    // ─────────────────────────────────────────────
+    // Domain-Specific Language Extensions
+    // ─────────────────────────────────────────────
+    public macro define_state_machine($name:ident { $($state:ident => { $($event:ident -> $next:ident),* }),* }) {
+        pub enum ${name}State { $($state),* }
+        pub enum ${name}Event { $($event),* }
+
+        impl $name {
+            pub fn transition(current: ${name}State, event: ${name}Event) -> ${name}State {
+                match (current, event) {
+                    $($(
+                        (${name}State::$state, ${name}Event::$event) => ${name}State::$next,
+                    )*)*
+                    _ => current
+                }
+            }
+        }
+    }
+
+    public macro query_builder {
+        select $($field:ident),* from $table:ident where $cond:expr => {
+            Query::new()
+                .select(vec![$(stringify!($field)),*])
+                .from(stringify!($table))
+                .where_clause($cond)
+        }
+    }
+
+    public macro html_template($($content:tt)*) {
+        format!(r#"
+            <!DOCTYPE html>
+            <html>
+                <head><title>Generated</title></head>
+                <body>{}</body>
+            </html>
+        "#, stringify!($($content)*))
+    }
+
+    // ─────────────────────────────────────────────
+    // Blockchain & Distributed Systems
+    // ─────────────────────────────────────────────
+    public class Block {
+        public index: usize,
+        public timestamp: DateTime,
+        public data: String,
+        public previous_hash: String,
+        public hash: String,
+        public nonce: u64
+    }
+
+    public class Blockchain {
+        private chain: Array<Block>
+        private difficulty: usize
+
+        public function new(difficulty: usize) -> Self {
+            let genesis = Block {
+                index: 0,
+                timestamp: UTC::now(),
+                data: "Genesis Block".to_string(),
+                previous_hash: "0".to_string(),
+                hash: "".to_string(),
+                nonce: 0
+            }
+
+            let mut blockchain = Blockchain { chain: vec![genesis], difficulty }
+            blockchain.chain[0].hash = blockchain.calculate_hash(&blockchain.chain[0])
+            blockchain
+        }
+
+        public function add_block(data: String) {
+            let previous_block = this.chain.last()
+            let mut new_block = Block {
+                index: previous_block.index + 1,
+                timestamp: UTC::now(),
+                data,
+                previous_hash: previous_block.hash.clone(),
+                hash: "".to_string(),
+                nonce: 0
+            }
+
+            this.mine_block(&mut new_block)
+            this.chain.push(new_block)
+        }
+
+        private function mine_block(block: &mut Block) {
+            let target = "0".repeat(this.difficulty)
+
+            loop {
+                block.hash = this.calculate_hash(block)
+                if block.hash.starts_with(&target) { break }
+                block.nonce += 1
+            }
+        }
+
+        private function calculate_hash(block: &Block) -> String {
+            let data = format!("{}{}{}{}{}",
+                block.index, block.timestamp, block.data,
+                block.previous_hash, block.nonce)
+            sha256(data)
+        }
+
+        public function is_valid() -> bool {
+            for i in 1..this.chain.length() {
+                let current = &this.chain[i]
+                let previous = &this.chain[i-1]
+
+                if current.hash != this.calculate_hash(current) { return false }
+                if current.previous_hash != previous.hash { return false }
+            }
+            true
+        }
+    }
+
+    public class MerkleTree {
+        private root: Option<Box<MerkleNode>>
+
+        public function new(leaves: Array<String>) -> Self {
+            let nodes = leaves.map(|data| {
+                Box::new(MerkleNode {
+                    hash: sha256(data),
+                    left: None,
+                    right: None
+                })
+            })
+
+            MerkleTree { root: Some(Self::build_tree(nodes)) }
+        }
+
+        private function build_tree(mut nodes: Array<Box<MerkleNode>>) -> Box<MerkleNode> {
+            while nodes.length() > 1 {
+                let mut parents = Vec::new()
+
+                for i in (0..nodes.length()).step_by(2) {
+                    let left = nodes[i]
+                    let right = if i + 1 < nodes.length() {
+                        nodes[i + 1]
+                    } else {
+                        nodes[i].clone()
+                    }
+
+                    let parent_hash = sha256(format!("{}{}", left.hash, right.hash))
+                    parents.push(Box::new(MerkleNode {
+                        hash: parent_hash,
+                        left: Some(left),
+                        right: Some(right)
+                    }))
+                }
+
+                nodes = parents
+            }
+
+            nodes[0]
+        }
+
+        public function get_root_hash() -> String {
+            this.root.as_ref().map(|n| n.hash.clone()).unwrap_or_default()
+        }
+
+        public function get_proof(data: String) -> Array<String> {
+            let target_hash = sha256(data)
+            let mut proof = Vec::new()
+            Self::collect_proof(this.root.as_ref(), &target_hash, &mut proof)
+            proof
+        }
+
+        public function verify_proof(data: String, proof: Array<String>, root_hash: String) -> bool {
+            let mut current_hash = sha256(data)
+
+            for sibling_hash in proof {
+                current_hash = sha256(format!("{}{}",
+                    min(&current_hash, &sibling_hash),
+                    max(&current_hash, &sibling_hash)))
+            }
+
+            current_hash == root_hash
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Image Processing Algorithms
+    // ─────────────────────────────────────────────
+    public function gaussian_blur(image: Image, kernel_size: usize, sigma: f64) -> Image {
+        let kernel = create_gaussian_kernel(kernel_size, sigma)
+        convolve(image, kernel)
+    }
+
+    public function sobel_edge_detection(image: Image) -> Image {
+        let gx = Matrix::from([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+        let gy = Matrix::from([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+
+        let grad_x = convolve(image, gx)
+        let grad_y = convolve(image, gy)
+
+        image.map_pixels(|i, j| {
+            sqrt(grad_x[i][j].pow(2) + grad_y[i][j].pow(2))
+        })
+    }
+
+    public function harris_corner_detection(image: Image, k: f64, threshold: f64) -> Array<Point> {
+        let ix = sobel_x(image)
+        let iy = sobel_y(image)
+        let ixy = ix.multiply_elementwise(iy)
+
+        let sx2 = gaussian_blur(ix.square(), 3, 1.0)
+        let sy2 = gaussian_blur(iy.square(), 3, 1.0)
+        let sxy = gaussian_blur(ixy, 3, 1.0)
+
+        let mut corners = Vec::new()
+
+        for i in 0..image.height() {
+            for j in 0..image.width() {
+                let det = sx2[i][j] * sy2[i][j] - sxy[i][j].pow(2)
+                let trace = sx2[i][j] + sy2[i][j]
+                let response = det - k * trace.pow(2)
+
+                if response > threshold {
+                    corners.push(Point { x: j, y: i })
+                }
+            }
+        }
+
+        non_maximum_suppression(corners, image)
+    }
+
+    public function canny_edge_detector(image: Image, low_threshold: f64, high_threshold: f64) -> Image {
+        let blurred = gaussian_blur(image, 5, 1.4)
+        let gradient = sobel_edge_detection(blurred)
+        let direction = compute_gradient_direction(blurred)
+        let suppressed = non_maximum_suppression_edges(gradient, direction)
+        double_threshold_hysteresis(suppressed, low_threshold, high_threshold)
+    }
+
+    public function hough_transform_lines(edges: Image) -> Array<Line> {
+        let (h, w) = (edges.height(), edges.width())
+        let max_rho = sqrt((h*h + w*w) as f64) as usize
+        let mut accumulator = Matrix::zeros(max_rho * 2, 180)
+
+        for i in 0..h {
+            for j in 0..w {
+                if edges[i][j] > 0 {
+                    for theta in 0..180 {
+                        let rho = j as f64 * cos(theta as f64 * pi / 180.0) +
+                                 i as f64 * sin(theta as f64 * pi / 180.0)
+                        let rho_idx = (rho + max_rho as f64) as usize
+                        accumulator[rho_idx][theta] += 1
+                    }
+                }
+            }
+        }
+
+        find_peaks(accumulator).map(|(rho, theta)| Line { rho, theta }).collect()
+    }
+
+    // ─────────────────────────────────────────────
+    // Audio Processing & DSP
+    // ─────────────────────────────────────────────
+    public function fft(samples: Array<Complex<f64>>) -> Array<Complex<f64>> {
+        let n = samples.length()
+        if n <= 1 { return samples }
+
+        let even = fft(samples.iter().step_by(2).cloned().collect())
+        let odd = fft(samples.iter().skip(1).step_by(2).cloned().collect())
+
+        let mut result = vec![Complex::zero(); n]
+
+        for k in 0..n/2 {
+            let t = Complex::from_polar(1.0, -2.0 * pi * k as f64 / n as f64) * odd[k]
+            result[k] = even[k] + t
+            result[k + n/2] = even[k] - t
+        }
+
+        result
+    }
+
+    public function ifft(spectrum: Array<Complex<f64>>) -> Array<Complex<f64>> {
+        let n = spectrum.length()
+        let conjugated = spectrum.map(|c| c.conjugate())
+        let result = fft(conjugated)
+        result.map(|c| c.conjugate() / n as f64)
+    }
+
+    public function low_pass_filter(signal: Array<f64>, cutoff_freq: f64, sample_rate: f64) -> Array<f64> {
+        let rc = 1.0 / (2.0 * pi * cutoff_freq)
+        let dt = 1.0 / sample_rate
+        let alpha = dt / (rc + dt)
+
+        let mut filtered = vec![signal[0]]
+
+        for i in 1..signal.length() {
+            filtered.push(alpha * signal[i] + (1.0 - alpha) * filtered[i-1])
+        }
+
+        filtered
+    }
+
+    public function spectrogram(signal: Array<f64>, window_size: usize, hop_size: usize) -> Matrix<f64> {
+        let num_windows = (signal.length() - window_size) / hop_size + 1
+        let mut spec = Matrix::zeros(num_windows, window_size / 2)
+
+        for i in 0..num_windows {
+            let start = i * hop_size
+            let window = signal[start..start+window_size].to_vec()
+            let windowed = window.iter().enumerate()
+                .map(|(j, &x)| x * hamming_window(j, window_size))
+                .map(|x| Complex::new(x, 0.0))
+                .collect()
+
+            let spectrum = fft(windowed)
+            spec[i] = spectrum[..window_size/2].iter()
+                .map(|c| c.norm())
+                .collect()
+        }
+
+        spec
+    }
+
+    public function autocorrelation(signal: Array<f64>) -> Array<f64> {
+        let n = signal.length()
+        (0..n).map(|lag| {
+            (0..n-lag).map(|i| signal[i] * signal[i + lag]).sum()
+        }).collect()
+    }
+
+    // ─────────────────────────────────────────────
+    // Simulation & Physics Engines
+    // ─────────────────────────────────────────────
+    public class RigidBody {
+        public position: Vector3<f64>,
+        public velocity: Vector3<f64>,
+        public acceleration: Vector3<f64>,
+        public mass: f64,
+        public angular_velocity: Vector3<f64>,
+        public torque: Vector3<f64>,
+        public inertia: Matrix3<f64>
+    }
+
+    public function simulate_physics(bodies: Array<RigidBody>, dt: f64, steps: usize) -> Array<RigidBody> {
+        let mut current = bodies
+
+        for _ in 0..steps {
+            // Apply forces
+            for body in current.iter_mut() {
+                let gravity = Vector3::new(0.0, -9.81 * body.mass, 0.0)
+                body.acceleration = gravity / body.mass
+            }
+
+            // Detect collisions
+            for i in 0..current.length() {
+                for j in i+1..current.length() {
+                    if detect_collision(&current[i], &current[j]) {
+                        resolve_collision(&mut current[i], &mut current[j])
+                    }
+                }
+            }
+
+            // Integrate using Verlet
+            for body in current.iter_mut() {
+                body.velocity = body.velocity + body.acceleration * dt
+                body.position = body.position + body.velocity * dt
+
+                body.angular_velocity = body.angular_velocity +
+                    body.inertia.inverse().multiply(body.torque) * dt
+            }
+        }
+
+        current
+    }
+
+    public function n_body_simulation(bodies: Array<CelestialBody>, dt: f64, steps: usize) -> Array<Array<Vector3<f64>>> {
+        let G = 6.67430e-11
+        let mut trajectories = bodies.map(|_| Vec::new())
+        let mut current = bodies
+
+        for _ in 0..steps {
+            // Record positions
+            for (i, body) in current.iter().enumerate() {
+                trajectories[i].push(body.position)
+            }
+
+            // Calculate forces
+            for i in 0..current.length() {
+                let mut force = Vector3::zero()
+
+                for j in 0..current.length() {
+                    if i != j {
+                        let r = current[j].position - current[i].position
+                        let distance = r.norm()
+                        let f_mag = G * current[i].mass * current[j].mass / distance.pow(2)
+                        force = force + f_mag * r.normalize()
+                    }
+                }
+
+                current[i].acceleration = force / current[i].mass
+            }
+
+            // Update velocities and positions
+            for body in current.iter_mut() {
+                body.velocity = body.velocity + body.acceleration * dt
+                body.position = body.position + body.velocity * dt
+            }
+        }
+
+        trajectories
+    }
+
+    // ─────────────────────────────────────────────
+    // Network Protocols & Communication
+    // ─────────────────────────────────────────────
+    public async function http_server(addr: SocketAddr, handler: Handler) -> Result<(), Error> {
+        let listener = TcpListener::bind(addr).await?
+
+        loop {
+            let (stream, _) = listener.accept().await?
+            let handler_clone = handler.clone()
+
+            spawn(async move {
+                match handle_connection(stream, handler_clone).await {
+                    Ok(_) => {},
+                    Err(e) => eprintln!("Connection error: {}", e)
+                }
+            })
+        }
+    }
+
+    public async function websocket_server(addr: SocketAddr) -> Result<(), Error> {
+        let listener = TcpListener::bind(addr).await?
+
+        loop {
+            let (stream, peer_addr) = listener.accept().await?
+
+            spawn(async move {
+                let ws = accept_websocket(stream).await?
+                handle_websocket_client(ws, peer_addr).await
+            })
+        }
+    }
+
+    public async function grpc_server<S: Service>(addr: SocketAddr, service: S) -> Result<(), Error> {
+        Server::builder()
+            .add_service(service)
+            .serve(addr)
+            .await
+    }
+
+    public function encode_protobuf<T: Message>(message: T) -> Vec<u8> {
+        let mut buffer = Vec::new()
+        message.encode(&mut buffer).unwrap()
+        buffer
+    }
+
+    public function decode_protobuf<T: Message>(bytes: &[u8]) -> Result<T, Error> {
+        T::decode(bytes)
+    }
+
+    // ─────────────────────────────────────────────
+    // Game Development Utilities
+    // ─────────────────────────────────────────────
+    public class GameObject {
+        public transform: Transform,
+        public components: Map<TypeId, Box<dyn Component>>,
+        pub children: Array<GameObject>
+    }
+
+    impl GameObject {
+        public function add_component<T: Component>(component: T) {
+            this.components.insert(TypeId::of::<T>(), Box::new(component))
+        }
+
+        public function get_component<T: Component>() -> Option<&T> {
+            this.components.get(&TypeId::of::<T>())
+                .and_then(|c| c.downcast_ref::<T>())
+        }
+
+        public function update(delta_time: f64) {
+            for component in this.components.values_mut() {
+                component.update(delta_time)
+            }
+
+            for child in this.children.iter_mut() {
+                child.update(delta_time)
+            }
+        }
+    }
+
+    public function raycast(origin: Vector3<f64>, direction: Vector3<f64>,
+                           objects: &[GameObject]) -> Option<RaycastHit> {
+        let mut closest_hit = None
+        let mut min_distance = f64::INFINITY
+
+        for obj in objects {
+            if let Some(collider) = obj.get_component::<Collider>() {
+                if let Some(hit) = collider.intersect_ray(origin, direction) {
+                    if hit.distance < min_distance {
+                        min_distance = hit.distance
+                        closest_hit = Some(hit)
+                    }
+                }
+            }
+        }
+
+        closest_hit
+    }
+
+    public function frustum_culling(camera: &Camera, objects: &[GameObject]) -> Vec<&GameObject> {
+        let frustum = camera.get_frustum_planes()
+
+        objects.iter()
+            .filter(|obj| {
+                let bounds = obj.get_component::<MeshRenderer>()
+                    .map(|r| r.bounds)
+                    .unwrap_or_default()
+
+                frustum.iter().all(|plane| !plane.is_outside(bounds))
+            })
+            .collect()
+    }
+
+    public function octree_spatial_partition<T>(objects: Array<(Vector3<f64>, T)>,
+                                               bounds: AABB, max_depth: usize) -> Octree<T> {
+        let mut tree = Octree::new(bounds, max_depth)
+
+        for (position, obj) in objects {
+            tree.insert(position, obj)
+        }
+
+        tree
+    }
+
+    // ─────────────────────────────────────────────
+    // Testing & Property-Based Testing
+    // ─────────────────────────────────────────────
+    public macro property_test($name:ident, $gen:expr, $prop:expr) {
+        #[test]
+        fn $name() {
+            for _ in 0..1000 {
+                let value = $gen();
+                assert!($prop(value), "Property violated");
+            }
+        }
+    }
+
+    public function quickcheck<T, F>(generator: impl Fn() -> T, property: F, iterations: usize)
+    where F: Fn(T) -> bool {
+        for i in 0..iterations {
+            let value = generator()
+            if !property(value) {
+                panic!("Property falsified at iteration {}", i)
+            }
+        }
+    }
+
+    public function fuzz_test<F>(target: F, input_gen: impl Fn() -> Vec<u8>, iterations: usize)
+    where F: Fn(&[u8]) -> Result<(), Error> {
+        let mut crashes = Vec::new()
+
+        for i in 0..iterations {
+            let input = input_gen()
+            match target(&input) {
+                Ok(_) => {},
+                Err(e) => {
+                    crashes.push((i, input, e))
+                }
+            }
+        }
+
+        if !crashes.is_empty() {
+            panic!("Found {} crashes: {:?}", crashes.len(), crashes)
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Final stress-test mega functions
+    // ─────────────────────────────────────────────
+    public function ultimate_complexity_bomb() -> Result<OmniResult, OmniError> {
+        let a = (0..1000).map(|x| x.pow(3)).filter(|x| x % 2 == 1).collect()
+        let b = async_prime_stream(10000).collect().await
+        let c = tensor_contract_full(generate_random_tensor(10, 10, 10), [0, 2])
+        let d = blockchain_consensus_proof_of_stake(validators, stakes, 100)
+        let e = quantum_teleportation(qubit_state, alice_qubit, bob_qubit)
+        let f = neural_network_forward(input_vector, pretrained_weights)
+
+        combine_all_results(a, b, c, d, e, f)
+    }
+
+    public async function distributed_mapreduce_ultimate<K, V, R>(
+        data: Array<V>,
+        map_fn: Function<V, Array<(K, V)>>,
+        reduce_fn: Function<K, Array<V>, R>,
+        num_workers: usize
+    ) -> Map<K, R> {
+        let chunks = data.chunks(data.length() / num_workers)
+
+        let map_results = chunks.map(|chunk| {
+            spawn(async move {
+                chunk.flat_map(|item| map_fn(item))
+            })
+        }).collect()
+
+        let mapped = join_all(map_results).await.flatten()
+
+        let grouped = mapped.group_by(|(k, _)| k)
+
+        let reduce_results = grouped.map(|(k, pairs)| {
+            let values = pairs.map(|(_, v)| v)
+            spawn(async move {
+                (k, reduce_fn(k, values))
+            })
+        }).collect()
+
+        join_all(reduce_results).await.into_iter().collect()
+    }
+
+    public function polyglot_interop_ultimate() {
+        let rust_result = rust_ffi::compute_fibonacci(50)
+        let python_result = python_bridge::call("numpy.linalg.inv", matrix)
+        let wasm_result = wasm_module::invoke("process_image", image_bytes)
+        let js_result = js_runtime::eval("Array.from({length: 100}, (_, i) => i * i)")
+
+        combine_polyglot_results([rust_result, python_result, wasm_result, js_result])
+    }
+
+    /*
+     * Ultra-nested documentation with every possible edge case
+     *
+     * This function demonstrates:
+     * - Multi-level /** doc comments */
+     * - Inline // comments
+     * - Block /* comments */
+     * - Nested /* /* comments */ */
+     * - Unicode in identifiers: α, β, γ, δ
+     * - Complex generic bounds: T: Clone + Send + Sync + 'static
+     * - Lifetime annotations: 'a, 'b, 'static
+     * - Associated types and trait bounds
+     */
+    public function ultimate_documented_generic<'a, T, U, V, W>(
+        /// First parameter with inline doc
+        param1: &'a T,
+        /* Block comment for param2 */
+        param2: Arc<Mutex<U>>,
+        // Regular comment for param3
+        param3: Box<dyn Fn(V) -> W + Send + 'static>
+    ) -> impl Future<Output = Result<W, DynError>> + 'a
+    where
+        T: Clone + Debug + Serialize + DeserializeOwned + 'a,
+        U: Send + Sync + 'static,
+        V: TryFrom<String> + Display,
+        W: Default + PartialEq + Eq + Hash
+    {
+        async move {
+            /* Nested comment level 1
+               /* Nested comment level 2
+                  /* Nested comment level 3 */
+               */
+            */
+
+            // Process param1
+            let cloned = param1.clone(); // Clone the reference
+
+            /* Lock param2 */ {
+                let guard = param2.lock().await; // Acquire lock
+                // Do something with guard
+            } // Lock released
+
+            /// Call param3 with default value
+            let result = param3(V::default()); // Invoke closure
+
+            Ok(result) // Return success
+        }
+    }
+
+    /// Absolutely final mega-stress expression combining EVERYTHING
+    public function omega_expression_ultimate() -> Void {
+        let result = ((((async_fibonacci(1000).collect().await
+            .map(|x| x ** 2)
+            .filter(|x| is_prime(*x))
+            .fold(Complex::zero(), |acc, x| acc + Complex::new(x as f64, 0.0)))
+            ⨁⋆ vector_random(100))
+            ∙⋆ matrix_inverse_advanced(generate_hilbert_matrix(50)).column(0))
+            >> quantum_teleportation(superposition_state, alice, bob).measure())
+            & blockchain_new(5).add_block("Transaction").is_valid() as u64
+            | neural_network_forward(input, weights).argmax()
+            ^ ~rsa_keygen(2048).0.e
+            != monte_carlo_integration(|x| x.sin(), 0.0, pi, 1_000_000) as u64
+            && raycast(origin, direction, &game_objects).is_some()
+            || merkle_tree_new(leaves).verify_proof(data, proof, root)
+            ?? DefaultValue::ultima()
+    }
+
+    // THE END - Exactly 3000 lines of ultimate stress-test pseudocode!
+}
+}

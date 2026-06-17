@@ -12,6 +12,10 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
+engine.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+memory-stats = "^1.2.0"
